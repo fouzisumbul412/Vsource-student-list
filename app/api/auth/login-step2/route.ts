@@ -1,0 +1,47 @@
+import { prisma } from "@/lib/prisma";
+import { ApiError } from "@/utils/ApiError";
+import { apiHandler } from "@/utils/apiHandler";
+import { ApiResponse } from "@/utils/ApiResponse";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+
+export const POST = apiHandler(async (req: Request) => {
+  const { employeeId, tempToken } = await req.json();
+
+  if (!employeeId || !tempToken) {
+    throw new ApiError(400, "Employee ID and tempToken are required");
+  }
+
+  let decoded: any;
+
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET!);
+  } catch (error) {
+    throw new ApiError(401, "Session expired, please login again");
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { employeeId, email: decoded.email },
+  });
+
+  if (!user) throw new ApiError(401, "Employee ID does not match");
+
+  const finalToken = jwt.sign(
+    { id: user.id, employeeId: user.employeeId },
+    process.env.JWT_SECRET!,
+    { expiresIn: "1d" }
+  );
+
+  cookies().set("token", finalToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    path: "/",
+    maxAge: 24 * 60 * 60,
+  });
+
+  return NextResponse.json(
+    new ApiResponse(200, { finalToken }, "Login successful")
+  );
+});

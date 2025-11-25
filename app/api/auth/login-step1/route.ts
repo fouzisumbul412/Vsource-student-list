@@ -1,0 +1,33 @@
+import { prisma } from "@/lib/prisma";
+import { ApiError } from "@/utils/ApiError";
+import { apiHandler } from "@/utils/apiHandler";
+import { ApiResponse } from "@/utils/ApiResponse";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
+
+export const POST = apiHandler(async (req: Request) => {
+  const { email, password } = await req.json();
+
+  if (!email || !password) {
+    throw new ApiError(400, "Email and Password are required");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) throw new ApiError(401, "Invalid email or password");
+
+  const tempToken = jwt.sign({ email }, process.env.JWT_SECRET!);
+
+  return NextResponse.json(
+    new ApiResponse(200, { tempToken }, "Step 1 success, proceed to step 2")
+  );
+});
