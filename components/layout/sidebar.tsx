@@ -10,74 +10,64 @@ import {
   ListChecks,
   CreditCard,
   FileText,
-  Users,
-  ChevronLeft,
+  Users
 } from "lucide-react";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
     label: "Student Registration",
-    href: "/dashboard/student-registration",
-    icon: UserPlus,
+    href: "/student-registration",
+    icon: UserPlus
   },
   {
     label: "Student Registration List",
-    href: "/dashboard/student-registration-list",
-    icon: ListChecks,
+    href: "/student-registration-list",
+    icon: ListChecks
   },
-  { label: "Sub Admin Form", href: "/dashboard/sub-admin", icon: Users },
-  { label: "Make Payment", href: "/dashboard/make-payment", icon: CreditCard },
+  { label: "Sub Admin Form", href: "/sub-admin", icon: Users },
+  { label: "Make Payment", href: "/make-payment", icon: CreditCard },
   {
     label: "Transactions List",
-    href: "/dashboard/transactions",
-    icon: FileText,
+    href: "/transactions",
+    icon: FileText
   },
-  { label: "Employee Logins", href: "/dashboard/employee-logins", icon: Users },
+  { label: "Employee Logins", href: "/employee-logins", icon: Users }
 ];
 
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
-  mobile?: boolean; // ⭐ Added
+  mobile?: boolean;
 }
 
-export function Sidebar({ collapsed, onToggle, mobile = false }: SidebarProps) {
+export function Sidebar({ collapsed, mobile = false }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
       className={cn(
-        "h-screen border-r border-slate-200 bg-white/95 shadow-sm flex flex-col transition-all duration-200",
+        "flex flex-col transition-all duration-200",
         mobile
-          ? "w-full"
-          : collapsed
-          ? "w-16 hidden lg:flex"
-          : "w-64 hidden lg:flex"
+          ? // Mobile panel (inside overlay)
+            "h-full w-full bg-slate-50"
+          : // Desktop sidebar
+          collapsed
+          ? "hidden h-screen w-16 border-r border-slate-200 bg-white/95 shadow-sm lg:flex"
+          : "hidden h-screen w-64 border-r border-slate-200 bg-white/95 shadow-sm lg:flex"
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4">
-        {!collapsed && !mobile && <Logo />}
-
-        {/* Only show collapse button on desktop */}
-        {!mobile && (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
-          >
-            <ChevronLeft
-              className={cn(
-                "h-4 w-4 transition-transform",
-                collapsed && "rotate-180"
-              )}
-            />
-          </button>
+      {/* Header with logo */}
+      <div
+        className={cn(
+          "flex items-center px-4 py-4",
+          !mobile && collapsed && "justify-center"
         )}
+      >
+        <Logo compact={!mobile && collapsed} />
       </div>
 
-      {/* Navigation */}
+      {/* Navigation items */}
       <nav className="mt-2 flex-1 space-y-1 px-2 text-sm">
         {menuItems.map((item) => {
           const Icon = item.icon;
