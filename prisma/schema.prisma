@@ -41,6 +41,7 @@ enum Branch {
 model StudentRegistration {
   id String @id @default(uuid())
   // Personal Information
+  stid            String @unique
   studentName     String
   nationality     String
   fathersName     String

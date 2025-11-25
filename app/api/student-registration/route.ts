@@ -24,8 +24,22 @@ export const POST = apiHandler(async (req: Request) => {
     );
   }
 
+  let lastStudent = await prisma.studentRegistration.findFirst({
+    orderBy: { createdAt: "desc" },
+    select: { stid: true },
+  });
+
+  let newStid = "ABMS001";
+
+  if (lastStudent?.stid) {
+    let lastNumber = parseInt(lastStudent.stid.replace("ABMS", ""));
+    let nextNumber = (lastNumber + 1).toString().padStart(3, "0");
+    newStid = `ABMS${nextNumber}`;
+  }
+
   const newStudent = await prisma.studentRegistration.create({
     data: {
+      stid: newStid,
       studentName: body.studentName,
       email: body.email,
       mobileNumber: body.mobileNumber,

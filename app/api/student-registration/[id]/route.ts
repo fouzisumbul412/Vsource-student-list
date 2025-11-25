@@ -10,6 +10,7 @@ export const PUT = apiHandler(async (req: Request, context: any) => {
   delete body.id;
   delete body.createdAt;
   delete body.updatedAt;
+  delete body.stid;
 
   const updatedStudent = await prisma.studentRegistration.update({
     where: { id },

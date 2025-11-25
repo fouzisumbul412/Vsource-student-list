@@ -6,11 +6,11 @@ const PUBLIC_PATHS = [
   "/",
   "/api/auth/login-step1",
   "/api/auth/login-step2",
+  "/api/auth/logout",
 ];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
   const token = req.cookies.get("token")?.value;
 
   const isPublic = PUBLIC_PATHS.some(
@@ -24,30 +24,23 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const isProtected =
+  const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/student") ||
+    pathname.startsWith("/employees") ||
     pathname.startsWith("/payments") ||
-    pathname.startsWith("/transactions") ||
-    pathname.startsWith("/employees");
+    pathname.startsWith("/transactions");
 
-  if (isProtected && !token) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/auth/login";
-    url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
-  }
+  if (isProtectedRoute) {
+    if (!token) {
+      return redirectToLogin(req, pathname);
+    }
 
-  if (token) {
     try {
       jwt.verify(token, process.env.JWT_SECRET!);
       return NextResponse.next();
-    } catch (err) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/auth/login";
-      url.searchParams.set("from", pathname);
-
-      const res = NextResponse.redirect(url);
+    } catch (error) {
+      const res = redirectToLogin(req, pathname);
       res.cookies.delete("token");
       return res;
     }
@@ -55,6 +48,14 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
+
+function redirectToLogin(req: NextRequest, currentPath: string) {
+  const url = req.nextUrl.clone();
+  url.pathname = "/auth/login";
+  url.searchParams.set("from", currentPath);
+  return NextResponse.redirect(url);
+}
+
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
