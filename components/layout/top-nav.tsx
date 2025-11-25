@@ -33,7 +33,7 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
       {/* Mobile Sidebar Trigger */}
       <div className="flex items-center lg:hidden">
         <Sheet>
-          <SheetTrigger>
+          <SheetTrigger >
             <Menu className="h-6 w-6 text-slate-700" />
           </SheetTrigger>
 
@@ -71,7 +71,9 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
           <DropdownMenuContent className="w-44">
             <DropdownMenuItem>{user?.name}</DropdownMenuItem>
             <DropdownMenuItem>{user?.role}</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} >
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

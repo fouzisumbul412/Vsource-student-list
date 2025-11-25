@@ -61,7 +61,7 @@ export function Sidebar({ collapsed, onToggle, mobile = false }: SidebarProps) {
         {!collapsed && !mobile && <Logo />}
 
         {/* Only show collapse button on desktop */}
-        {!mobile && (
+        {mobile && (
           <button
             type="button"
             onClick={onToggle}

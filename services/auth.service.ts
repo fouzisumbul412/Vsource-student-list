@@ -17,32 +17,32 @@ const MOCK_USERS: MockUser[] = [
   {
     id: "VS-0001",
     name: "Super Admin",
-    email: "superadmin@vsource.com",
-    employeeId: "EID001",
+    email: "superadmin@vsource.online",
+    employeeId: "VSH001",
     role: "SuperAdmin",
     password: "Vsource@123"
   },
   {
     id: "VS-0002",
     name: "Admin User",
-    email: "admin@vsource.com",
-    employeeId: "EID002",
+    email: "admin@vsource.online",
+    employeeId: "VSH002",
     role: "Admin",
     password: "Admin@123"
   },
   {
     id: "VS-0003",
     name: "Accountant User",
-    email: "accountant@vsource.com",
-    employeeId: "EID003",
+    email: "accountant@vsource.online",
+    employeeId: "VSH003",
     role: "Accountant",
     password: "Account@123"
   },
-    {
+  {
     id: "VS-0100",
     name: "Sub Admin User",
-    email: "subadmin@vsource.com",
-    employeeId: "EID010",
+    email: "subadmin@vsource.online",
+    employeeId: "VSH005",
     role: "SubAdmin",
     password: "SubAdmin@123"
   }
