@@ -33,7 +33,7 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
       {/* Mobile Sidebar Trigger */}
       <div className="flex items-center lg:hidden">
         <Sheet>
-          <SheetTrigger className="flex items-center">
+          <SheetTrigger>
             <Menu className="h-6 w-6 text-slate-700" />
           </SheetTrigger>
 
@@ -62,7 +62,7 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
       {/* Right: Avatar + Dropdown */}
       <div className="ml-auto flex items-center">
         <DropdownMenu>
-          <DropdownMenuTrigger className="cursor-pointer">
+          <DropdownMenuTrigger>
             <Avatar className="bg-primary text-white flex items-center justify-center">
               {user?.name?.charAt(0) || "A"}
             </Avatar>
@@ -71,9 +71,7 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
           <DropdownMenuContent className="w-44">
             <DropdownMenuItem>{user?.name}</DropdownMenuItem>
             <DropdownMenuItem>{user?.role}</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-              Logout
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
