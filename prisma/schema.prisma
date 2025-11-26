@@ -8,34 +8,33 @@ datasource db {
 }
 
 model User {
-  id         String     @id @default(uuid())
-  employeeId String     @unique
+  id         String   @id @default(uuid())
+  employeeId String   @unique
   name       String
-  email      String     @unique
+  email      String   @unique
   loginType  String
-  phone      String     @unique
+  phone      String   @unique
   password   String
   branch     Branch
   role       String?
-  date       DateTime   @default(now())
-  time       DateTime   @default(now())
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  history    LoginLog[]
+  date       DateTime @default(now())
+  time       DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employeeLoginDetails EmployeeLoginDetail[]
 }
 
-model LoginLog {
-  id         String   @id @default(uuid())
-  userId     String
-  employeeId String
-  name       String
-  username   String
-  role       String
-  loginType  String
-  timestamp  DateTime @default(now())
-  branch     Branch
+model EmployeeLoginDetail {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loginTime DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
 }
 
 enum Branch {
