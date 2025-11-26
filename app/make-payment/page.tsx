@@ -13,9 +13,6 @@ export default function MakePaymentPage() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
-  // ------------------------------
-  // FETCH STUDENTS (ONLY CONFIRMED)
-  // ------------------------------
   const fetchConfirmedStudents = async () => {
     const { data } = await api.get(
       "/api/student-registration?status=CONFIRMED"
@@ -26,7 +23,6 @@ export default function MakePaymentPage() {
     data: students,
     isLoading,
     isError,
-    refetch,
     error,
   } = useQuery({
     queryKey: ["confirmed-students"],

@@ -5,12 +5,13 @@ import { ApiResponse } from "@/utils/ApiResponse";
 import { NextResponse } from "next/server";
 
 export const GET = apiHandler(async (_req: Request, context: any) => {
+  console.log(context.params);
   const { id } = context.params;
 
-  if (!id) throw new ApiError(400, "payment ID is required");
+  if (!id) throw new ApiError(400, "payment student id is required");
 
   const payment = await prisma.payment.findUnique({
-    where: { id },
+    where: { studentId: id },
     include: {
       student: {
         select: {
@@ -26,11 +27,11 @@ export const GET = apiHandler(async (_req: Request, context: any) => {
     },
   });
 
-  if (!payment) throw new ApiError(404, `No payment found with this id ${id}`);
+  const message = payment
+    ? "payment fetched successfully"
+    : `No payment found with this id ${id}`;
 
-  return NextResponse.json(
-    new ApiResponse(200, payment, "user fetched successfully")
-  );
+  return NextResponse.json(new ApiResponse(200, payment, message));
 });
 
 export const PUT = apiHandler(async (req: Request, context: any) => {

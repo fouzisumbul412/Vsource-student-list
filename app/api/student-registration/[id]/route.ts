@@ -41,6 +41,15 @@ export const GET = apiHandler(async (req: Request, context: any) => {
 
   const student = await prisma.studentRegistration.findUnique({
     where: { id },
+    select: {
+      id: true,
+      stid: true,
+      studentName: true,
+      email: true,
+      serviceCharge: true,
+      payment: true,
+      dateOfBirth: true,
+    },
   });
 
   if (!student) {

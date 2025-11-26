@@ -107,6 +107,9 @@ model Payment {
   invoiceNumber String        @unique // VS-25-26/B01
   status        PaymentStatus @default(PENDING)
   bankDetails   String
+  gst           Float?
+  gstAmount     Float?
+  referenceNo   String?
 
   studentId String              @unique
   student   StudentRegistration @relation(fields: [studentId], references: [id], onDelete: Cascade)

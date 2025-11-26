@@ -71,6 +71,9 @@ export const POST = apiHandler(async (req: Request) => {
       bankDetails: body.bankDetails,
       invoiceNumber: nextInvoiceNumber,
       studentId: body.studentId,
+      gst: body.gst,
+      gstAmount: body.gstAmount,
+      referenceNo: body.referenceNo,
     },
   });
 
