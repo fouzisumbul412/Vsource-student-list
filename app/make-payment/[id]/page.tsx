@@ -16,9 +16,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-// import { Toast } from "@/components/ui/toast";
-// import { toast } from "@/components/ui/use-toast";
+import api from "@/lib/axios";
 
+// ─────────────────────────────────────────────
+// PAYMENT METHODS
+// ─────────────────────────────────────────────
 const paymentOptions = [
   { value: "online", label: "By Online Payment" },
   { value: "cash", label: "By Cash" },
@@ -38,11 +40,17 @@ export default function PaymentFormPage() {
 
   const [collapsed, setCollapsed] = useState(false);
 
+  // ─────────────────────────────────────────────
+  // FORM STATE
+  // ─────────────────────────────────────────────
   const [feeType, setFeeType] = useState<string>();
   const [paymentMethod, setPaymentMethod] = useState<string>();
   const [bankDetails, setBankDetails] = useState("");
   const [amount, setAmount] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
+
+  const [gstPercent, setGstPercent] = useState("");
+  const [gstAmount, setGstAmount] = useState("");
 
   const needsReferenceNo = [
     "online",
@@ -53,13 +61,12 @@ export default function PaymentFormPage() {
     "online-cash",
   ].includes(paymentMethod || "");
 
-  // ------------------------------
+  // ─────────────────────────────────────────────
   // FETCH STUDENT DETAILS
-  // ------------------------------
+  // ─────────────────────────────────────────────
   const fetchStudent = async () => {
-    const res = await fetch(`/api/student-registration/${id}`);
-    const json = await res.json();
-    return json.data;
+    const res = await api.get(`/api/student-registration/${id}`);
+    return res.data.data;
   };
 
   const { data: student, isLoading } = useQuery({
@@ -67,13 +74,14 @@ export default function PaymentFormPage() {
     queryFn: fetchStudent,
   });
 
-  // ------------------------------
+  // ─────────────────────────────────────────────
   // FETCH PAYMENT HISTORY
-  // ------------------------------
+  // ─────────────────────────────────────────────
   const fetchPayments = async () => {
-    const res = await fetch(`/api/payment`);
-    const json = await res.json();
-    return json.data.filter((p: any) => p.studentId === id);
+    const res = await api.get("/api/payment");
+
+    // FIX: correct filter → payment.student.id
+    return res.data.data.filter((p: any) => p.student?.id === id);
   };
 
   const { data: history = [] } = useQuery({
@@ -81,9 +89,9 @@ export default function PaymentFormPage() {
     queryFn: fetchPayments,
   });
 
-  // ------------------------------
-  // SUBMIT PAYMENT MUTATION
-  // ------------------------------
+  // ─────────────────────────────────────────────
+  // SUBMIT PAYMENT
+  // ─────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -94,27 +102,24 @@ export default function PaymentFormPage() {
         amount: Number(amount),
         bankDetails,
         referenceNo,
+        gstPercent: gstPercent ? Number(gstPercent) : null,
+        gstAmount: gstAmount ? Number(gstAmount) : null,
       };
 
-      const res = await fetch("/api/payment", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) throw new Error(json.message);
-      return json.data;
+      const res = await api.post("/api/payment", payload);
+      return res.data.data;
     },
+
     onSuccess: () => {
       toast({
         title: "Payment Successful",
         description: "Payment entry created.",
       });
 
-      queryClient.invalidateQueries(["payments", id]);
+      queryClient.invalidateQueries({ queryKey: ["payments", id] });
       router.push("/make-payment");
     },
+
     onError: (error: any) => {
       toast({
         title: "Error",
@@ -124,6 +129,9 @@ export default function PaymentFormPage() {
     },
   });
 
+  // ─────────────────────────────────────────────
+  // LOADING / NOT FOUND UI
+  // ─────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen text-slate-500">
@@ -140,6 +148,9 @@ export default function PaymentFormPage() {
     );
   }
 
+  // ─────────────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────────────
   return (
     <div className="flex w-full bg-slate-100">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
@@ -153,10 +164,12 @@ export default function PaymentFormPage() {
         <div className="p-6">
           <h1 className="text-2xl font-semibold mb-6">Make Payments</h1>
 
-          {/* PAYMENT FORM */}
+          {/* ─────────────────────────────────────────────
+              PAYMENT FORM
+            ───────────────────────────────────────────── */}
           <div className="rounded-xl bg-white border shadow-sm p-6 mb-8">
             <div className="grid md:grid-cols-2 gap-10">
-              {/* LEFT */}
+              {/* LEFT — STUDENT INFO */}
               <div className="space-y-3 bg-slate-50/60 p-4 rounded-lg">
                 <p className="text-sm">
                   <span className="font-medium">Student:</span>{" "}
@@ -171,8 +184,9 @@ export default function PaymentFormPage() {
                 </p>
               </div>
 
-              {/* RIGHT — FORM */}
+              {/* RIGHT — PAYMENT FORM */}
               <div className="space-y-4">
+                {/* Fee Type + Payment Method */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Fee Type */}
                   <div>
@@ -235,6 +249,35 @@ export default function PaymentFormPage() {
                   />
                 </div>
 
+                {/* GST SECTION */}
+                {feeType === "service-fee" && (
+                  <div className="grid grid-cols-2 gap-4 border p-3 rounded-lg bg-slate-50">
+                    <div>
+                      <label className="text-[11px] font-medium uppercase">
+                        GST %
+                      </label>
+                      <Input
+                        className="h-9"
+                        placeholder="GST Percent"
+                        value={gstPercent}
+                        onChange={(e) => setGstPercent(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-medium uppercase">
+                        GST Amount
+                      </label>
+                      <Input
+                        className="h-9"
+                        placeholder="GST Amount"
+                        value={gstAmount}
+                        onChange={(e) => setGstAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Reference No */}
                 {needsReferenceNo && (
                   <div>
@@ -261,7 +304,9 @@ export default function PaymentFormPage() {
             </div>
           </div>
 
-          {/* PAYMENT HISTORY TABLE */}
+          {/* ─────────────────────────────────────────────
+              PAYMENT HISTORY TABLE
+            ───────────────────────────────────────────── */}
           <div className="rounded-xl bg-white p-6 shadow-md">
             <h2 className="text-lg font-semibold mb-4">Payment History</h2>
 
@@ -274,6 +319,7 @@ export default function PaymentFormPage() {
                     <th className="p-2 border">S.No</th>
                     <th className="p-2 border">Fee Type</th>
                     <th className="p-2 border">Amount</th>
+                    <th className="p-2 border">GST</th>
                     <th className="p-2 border">Method</th>
                     <th className="p-2 border">Date</th>
                     <th className="p-2 border">Invoice</th>
@@ -287,6 +333,11 @@ export default function PaymentFormPage() {
                       <td className="p-2 border">{index + 1}</td>
                       <td className="p-2 border">{p.feeType}</td>
                       <td className="p-2 border">{p.amount}</td>
+                      <td className="p-2 border">
+                        {p.gstPercent
+                          ? `${p.gstPercent}% (${p.gstAmount})`
+                          : "-"}
+                      </td>
                       <td className="p-2 border">{p.paymentMethod}</td>
                       <td className="p-2 border">
                         {new Date(p.date).toLocaleDateString()}
