@@ -41,6 +41,17 @@ export const POST = apiHandler(async (req: Request) => {
     maxAge: 24 * 60 * 60,
   });
 
+  await prisma.employeeLoginDetail.create({
+    data: {
+      userId: user.id,
+      ipAddress:
+        req.headers.get("x-forwarded-for") ||
+        req.headers.get("x-real-ip") ||
+        "Unknown",
+      userAgent: req.headers.get("user-agent") || "Unknown",
+    },
+  });
+
   return NextResponse.json(
     new ApiResponse(200, { finalToken }, "Login successful")
   );
