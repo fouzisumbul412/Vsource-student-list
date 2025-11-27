@@ -33,7 +33,7 @@ export const PATCH = apiHandler(async (req: Request, context: any) => {
   delete body.id;
   delete body.createdAt;
   delete body.updatedAt;
-  delete body.invoiceNumber;
+  // delete body.invoiceNumber;
 
   const updatedPayment = await prisma.payment.update({
     where: { id },

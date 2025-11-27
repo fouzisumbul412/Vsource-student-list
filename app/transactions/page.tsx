@@ -98,14 +98,14 @@ function InvoiceModal({ data, onClose }: any) {
         className="bg-white w-[210mm] min-h-[297mm] p-6 shadow-lg relative border border-gray-400 text-[13px] font-[Calibri] leading-tight"
       >
         {/* Close Button */}
-        {/* <Button
+        <Button
           variant="outline"
           size="icon"
           className="absolute top-4 right-4"
           onClick={onClose}
         >
           <X className="w-4 h-4" />
-        </Button> */}
+        </Button>
 
         {/* Header */}
         <h1 className="text-xl font-bold text-center mb-2 uppercase tracking-wide">
@@ -283,15 +283,20 @@ export default function TransactionsPage() {
     paymentMethod: "",
     amount: "",
     status: "",
+    invoiceNumber: "",
+    date: "",
   });
-
   useEffect(() => {
     if (openEdit) {
+      const formattedDate = openEdit.date ? openEdit.date.split("T")[0] : "";
+
       setEditForm({
-        feeType: openEdit?.feeType || "",
-        paymentMethod: openEdit?.paymentMethod || "",
-        amount: openEdit?.amount || "",
-        status: openEdit?.status || "", // ✅ added
+        feeType: openEdit.feeType || "",
+        paymentMethod: openEdit.paymentMethod || "",
+        amount: openEdit.amount || "",
+        status: openEdit.status || "",
+        invoiceNumber: openEdit.invoiceNumber || "",
+        date: formattedDate,
       });
     }
   }, [openEdit]);
@@ -520,7 +525,10 @@ export default function TransactionsPage() {
                     <TableCell>
                       <Button
                         className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => setOpenEdit(p)}
+                        onClick={() => {
+                          console.log(p);
+                          setOpenEdit(p);
+                        }}
                       >
                         Edit
                       </Button>
@@ -657,6 +665,21 @@ export default function TransactionsPage() {
                   setEditForm({ ...editForm, amount: e.target.value })
                 }
               />
+
+              <Input
+                value={editForm.invoiceNumber}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, invoiceNumber: e.target.value })
+                }
+              />
+
+              <Input
+                type="date"
+                value={editForm.date}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, date: e.target.value })
+                }
+              />
             </div>
           )}
 
@@ -665,7 +688,14 @@ export default function TransactionsPage() {
               className="bg-blue-600 hover:bg-blue-700"
               disabled={updatePaymentMutation?.isPending}
               onClick={() => {
-                const payload = { ...editForm };
+                const payload = {
+                  ...editForm,
+                  amount: Number(editForm.amount), // convert to number
+                  date: editForm.date
+                    ? new Date(editForm.date).toISOString()
+                    : null,
+                };
+
                 updatePaymentMutation.mutate({
                   id: openEdit.id,
                   ...payload,
