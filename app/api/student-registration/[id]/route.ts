@@ -1,29 +1,73 @@
+import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/utils/ApiError";
 import { apiHandler } from "@/utils/apiHandler";
 import { ApiResponse } from "@/utils/ApiResponse";
 import { NextResponse } from "next/server";
 
+
 export const PUT = apiHandler(async (req: Request, context: any) => {
   const { id } = context.params;
-  const body = await req.json();
-
   if (!id) throw new ApiError(400, "student ID is required");
 
-  delete body.id;
-  delete body.createdAt;
-  delete body.updatedAt;
-  delete body.stid;
+  const body = await req.json();
+
+  // 🔒 Build a clean payload with correct types
+  const data = {
+    // Personal Information
+    studentName: body.studentName as string,
+    nationality: body.nationality as string,
+    fathersName: body.fathersName as string,
+    dateOfBirth: body.dateOfBirth
+      ? new Date(body.dateOfBirth)
+      : undefined,
+    mobileNumber: body.mobileNumber as string,
+    email: body.email as string,
+    parentMobile: body.parentMobile as string,
+    gender: body.gender as string,
+    registrationDate: body.registrationDate
+      ? new Date(body.registrationDate)
+      : undefined,
+
+    // Present Address
+    addressLine1: body.addressLine1 as string,
+    addressLine2: body.addressLine2 ?? null,
+    country: body.country as string,
+    state: body.state as string,
+    city: body.city as string,
+    district: body.district as string,
+    pincode: body.pincode as string,
+
+    // Course Details
+    abroadMasters: body.abroadMasters as string,
+    courseName: body.courseName as string,
+    serviceCharge:
+      body.serviceCharge === "" || body.serviceCharge == null
+        ? 0
+        : Number(body.serviceCharge),
+    academicYear: body.academicYear as string,
+    processedBy: body.processedBy as string,
+    counselorName: body.counselorName as string,
+    officeCity: body.officeCity as string,
+    assigneeName: body.assigneeName as string,
+    passportNumber: body.passportNumber ?? null,
+
+    // Status (enum)
+    status: body.status
+      ? (body.status as RegistrationStatus)
+      : undefined,
+  };
 
   const updatedStudent = await prisma.studentRegistration.update({
     where: { id },
-    data: body,
+    data,
   });
 
   return NextResponse.json(
     new ApiResponse(200, updatedStudent, "Student updated successfully")
   );
 });
+
 
 export const DELETE = apiHandler(async (_req: Request, context: any) => {
   const { id } = context.params;
@@ -34,7 +78,6 @@ export const DELETE = apiHandler(async (_req: Request, context: any) => {
   );
 });
 
-// 🔴 FIXED GET – return all fields required by the form
 export const GET = apiHandler(async (_req: Request, context: any) => {
   const { id } = context.params;
 

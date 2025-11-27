@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,17 +27,19 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
+// (optional) util if you still want static year options somewhere else
+// but here we’ll derive years from data itself.
+
 export default function StudentRegistrationList() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [collapsed, setCollapsed] = useState(false);
-  // const [masters, setMasters] = useState("");
-  // const [team, setTeam] = useState("");
-  // const [year, setYear] = useState("");
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  // const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
+
+  // filter states
   const [masters, setMasters] = useState("ALL");
   const [team, setTeam] = useState("ALL");
   const [year, setYear] = useState("ALL");
@@ -70,13 +72,40 @@ export default function StudentRegistrationList() {
     }
   };
 
-  const exportExcel = () => {
-    const sheet = XLSX.utils.json_to_sheet(filtered);
-    const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, "Student Registrations");
-    XLSX.writeFile(book, "student-registration-list.xlsx");
-  };
+  // 🔹 Build filter option lists directly from the data coming from DB
+  const mastersOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((s: any) => {
+      if (s.abroadMasters) set.add(s.abroadMasters);
+    });
+    return ["ALL", ...Array.from(set)];
+  }, [data]);
 
+  const teamOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((s: any) => {
+      if (s.processedBy) set.add(s.processedBy);
+    });
+    return ["ALL", ...Array.from(set)];
+  }, [data]);
+
+  const yearOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((s: any) => {
+      if (s.academicYear) set.add(s.academicYear);
+    });
+    return ["ALL", ...Array.from(set)];
+  }, [data]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((s: any) => {
+      if (s.status) set.add(s.status); // e.g. CONFIRMED | HOLD | CANCELLED
+    });
+    return ["ALL", ...Array.from(set)];
+  }, [data]);
+
+  // 🔹 Actual filter logic
   const filtered = useMemo(() => {
     return data.filter((item: any) => {
       // Masters
@@ -117,6 +146,13 @@ export default function StudentRegistrationList() {
     });
   }, [data, masters, team, year, status, fromDate, toDate, search]);
 
+  const exportExcel = () => {
+    const sheet = XLSX.utils.json_to_sheet(filtered);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, "Student Registrations");
+    XLSX.writeFile(book, "student-registration-list.xlsx");
+  };
+
   return (
     <div className="flex w-full bg-slate-100 min-h-screen">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
@@ -125,11 +161,13 @@ export default function StudentRegistrationList() {
           sidebarCollapsed={collapsed}
           onToggleSidebar={() => setCollapsed((c) => !c)}
         />
+
         <Card className="p-6 m-4 shadow-md bg-white">
           <h2 className="text-xl font-semibold mb-4">
             Student Registration List
           </h2>
 
+          {/* ---------------- FILTER BAR ---------------- */}
           <div
             className="grid gap-4 mb-6 
             xl:grid-cols-6 
@@ -141,21 +179,16 @@ export default function StudentRegistrationList() {
             {/* Masters */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Abroad Masters</label>
-              <Select onValueChange={setMasters}>
+              <Select value={masters} onValueChange={setMasters}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="ABROADMASTERS-USA">USA</SelectItem>
-                  <SelectItem value="ABROADMASTERS-UK">UK</SelectItem>
-                  <SelectItem value="ABROADMASTERS-AUSTRALIA">
-                    AUSTRALIA
-                  </SelectItem>
-                  <SelectItem value="ABROADMASTERS-CANADA">CANADA</SelectItem>
-                  <SelectItem value="ABROADMASTERS-IRELAND">IRELAND</SelectItem>
-                  <SelectItem value="ABROADMASTERS-FRANCE">FRANCE</SelectItem>
-                  <SelectItem value="ABROADMASTERS-GERMANY">GERMANY</SelectItem>
+                  {mastersOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt === "ALL" ? "All" : opt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -163,15 +196,16 @@ export default function StudentRegistrationList() {
             {/* Team */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Team</label>
-              <Select onValueChange={setTeam}>
+              <Select value={team} onValueChange={setTeam}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="TEAM-1">TEAM-1</SelectItem>
-                  <SelectItem value="TEAM-2">TEAM-2</SelectItem>
-                  <SelectItem value="TEAM-ONLINE">TEAM-ONLINE</SelectItem>
+                  {teamOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt === "ALL" ? "All" : opt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -179,20 +213,16 @@ export default function StudentRegistrationList() {
             {/* Year */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Year</label>
-              <Select onValueChange={setYear}>
+              <Select value={year} onValueChange={setYear}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="SPRING-2024">SPRING-2024</SelectItem>
-                  <SelectItem value="FALL-2024">FALL-2024</SelectItem>
-                  <SelectItem value="SUMMER-2024">SUMMER-2024</SelectItem>
-                  <SelectItem value="SPRING-2025">SPRING-2025</SelectItem>
-                  <SelectItem value="FALL-2025">FALL-2025</SelectItem>
-                  <SelectItem value="SUMMER-2025">SUMMER-2025</SelectItem>
-                  <SelectItem value="SPRING-2026">SPRING-2026</SelectItem>
-                  <SelectItem value="FALL-2026">FALL-2026</SelectItem>
+                  {yearOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt === "ALL" ? "All" : opt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -203,6 +233,7 @@ export default function StudentRegistrationList() {
               <Input
                 type="date"
                 className="h-10"
+                value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
               />
             </div>
@@ -213,6 +244,7 @@ export default function StudentRegistrationList() {
               <Input
                 type="date"
                 className="h-10"
+                value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
               />
             </div>
@@ -220,28 +252,48 @@ export default function StudentRegistrationList() {
             {/* Status */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Status</label>
-              <Select onValueChange={setStatus}>
+              <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="Confirmed">Confirmed</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Hold">Hold</SelectItem>
+                  {statusOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt === "ALL"
+                        ? "All"
+                        : opt === "CONFIRMED"
+                        ? "Confirmed"
+                        : opt === "HOLD"
+                        ? "Hold"
+                        : opt === "CANCELLED"
+                        ? "Cancelled"
+                        : opt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* extra controls */}
           <div className="flex gap-3 mb-4 items-center">
-            <Button>Submit</Button>
+            {/* Filters are live; this button is optional */}
+            <Button
+              type="button"
+              onClick={() => {
+                // placeholder, can be used for server-side filtering later
+              }}
+            >
+              Submit
+            </Button>
+
             <Button
               onClick={exportExcel}
               className="bg-red-600 hover:bg-red-700"
             >
               Export to Excel
             </Button>
+
             <Input
               placeholder="Search..."
               className="ml-auto w-60"
@@ -250,113 +302,110 @@ export default function StudentRegistrationList() {
             />
           </div>
 
+          {/* ---------------- TABLE VIEW (DESKTOP) ---------------- */}
           <div className="hidden md:block overflow-x-scroll mt-6">
-            <Table className="border border-gray-300">
-              <TableHeader>
-                <TableRow className="border-b border-gray-300">
-                  <TableHead className="border-r">S.No</TableHead>
-                  <TableHead className="border-r">StdId</TableHead>
-                  <TableHead className="border-r">Team</TableHead>
-                  <TableHead className="border-r">Assignee</TableHead>
-                  <TableHead className="border-r">Counsellor</TableHead>
-                  <TableHead className="border-r">Student Name</TableHead>
-                  <TableHead className="border-r">Mobile Number</TableHead>
-                  <TableHead className="border-r">Email</TableHead>
-                  <TableHead className="border-r">Masters</TableHead>
-                  <TableHead className="border-r">Father Name</TableHead>
-                  <TableHead className="border-r">Father Mobile</TableHead>
-                  <TableHead className="border-r">Town</TableHead>
-                  {/* <TableHead className="border-r">Type</TableHead> */}
-                  <TableHead className="border-r">Status</TableHead>
-                  <TableHead className="border-r text-center">
-                    Actions
-                  </TableHead>
-                  {/* <TableHead className="text-center">Confirm</TableHead> */}
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {filtered.map((item: any, index: number) => (
-                  <TableRow key={item.id} className="hover:bg-gray-50 border-b">
-                    <TableCell className="border-r">{index + 1}</TableCell>
-
-                    <TableCell className="border-r">{item.stid}</TableCell>
-
-                    <TableCell className="border-r">
-                      {item.processedBy}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.assigneeName}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.counselorName}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.studentName}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.mobileNumber}
-                    </TableCell>
-
-                    <TableCell className="border-r">{item.email}</TableCell>
-
-                    <TableCell className="border-r">
-                      {item.abroadMasters}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.fathersName}
-                    </TableCell>
-
-                    <TableCell className="border-r">
-                      {item.parentMobile}
-                    </TableCell>
-
-                    <TableCell className="border-r">{item.city}</TableCell>
-
-                    {/* <TableCell className="border-r">{item.type}</TableCell> */}
-
-                    <TableCell className="border-r">{item.status}</TableCell>
-
-                    <TableCell className="border-r text-center flex justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          router.push(`/student-registration/${item.id}`)
-                        }
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-
-                      <Button size="sm" onClick={() => handleDelete(item.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-
-                    {/* <TableCell className="text-center font-medium">
-                      {item.confirm ? (
-                        <span className="text-green-600">Yes</span>
-                      ) : (
-                        <span className="text-red-600">No</span>
-                      )}
-                    </TableCell> */}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {filtered.length === 0 && (
-              <p className="text-center py-4 text-slate-500">
-                No records found
+            {isLoading && (
+              <p className="text-center py-4 text-slate-500">Loading…</p>
+            )}
+            {isError && !isLoading && (
+              <p className="text-center py-4 text-red-500">
+                Failed to load data
               </p>
+            )}
+
+            {!isLoading && (
+              <>
+                <Table className="border border-gray-300">
+                  <TableHeader>
+                    <TableRow className="border-b border-gray-300">
+                      <TableHead className="border-r">S.No</TableHead>
+                      <TableHead className="border-r">StdId</TableHead>
+                      <TableHead className="border-r">Team</TableHead>
+                      <TableHead className="border-r">Assignee</TableHead>
+                      <TableHead className="border-r">Counsellor</TableHead>
+                      <TableHead className="border-r">Student Name</TableHead>
+                      <TableHead className="border-r">Mobile Number</TableHead>
+                      <TableHead className="border-r">Email</TableHead>
+                      <TableHead className="border-r">Masters</TableHead>
+                      <TableHead className="border-r">Father Name</TableHead>
+                      <TableHead className="border-r">Father Mobile</TableHead>
+                      <TableHead className="border-r">Town</TableHead>
+                      <TableHead className="border-r">Status</TableHead>
+                      <TableHead className="border-r text-center">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
+                    {filtered.map((item: any, index: number) => (
+                      <TableRow
+                        key={item.id}
+                        className="hover:bg-gray-50 border-b"
+                      >
+                        <TableCell className="border-r">{index + 1}</TableCell>
+                        <TableCell className="border-r">{item.stid}</TableCell>
+                        <TableCell className="border-r">
+                          {item.processedBy}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.assigneeName}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.counselorName}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.studentName}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.mobileNumber}
+                        </TableCell>
+                        <TableCell className="border-r">{item.email}</TableCell>
+                        <TableCell className="border-r">
+                          {item.abroadMasters}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.fathersName}
+                        </TableCell>
+                        <TableCell className="border-r">
+                          {item.parentMobile}
+                        </TableCell>
+                        <TableCell className="border-r">{item.city}</TableCell>
+                        <TableCell className="border-r">
+                          {item.status}
+                        </TableCell>
+                        <TableCell className="border-r text-center flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              router.push(`/student-registration/${item.id}`)
+                            }
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {filtered.length === 0 && (
+                  <p className="text-center py-4 text-slate-500">
+                    No records found
+                  </p>
+                )}
+              </>
             )}
           </div>
 
+          {/* ---------------- MOBILE CARDS ---------------- */}
           <div className="md:hidden grid gap-4">
             {filtered.map((item: any) => (
               <Card key={item.id} className="p-4 shadow-sm border">
@@ -382,7 +431,7 @@ export default function StudentRegistrationList() {
                 </div>
               </Card>
             ))}
-            {filtered.length === 0 && (
+            {filtered.length === 0 && !isLoading && (
               <p className="text-center py-4 text-slate-500">
                 No records found
               </p>

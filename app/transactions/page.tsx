@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { paymentOptions } from "../make-payment/[id]/page";
 
 const splitGST = (state: string | undefined, totalGst: number) => {
   if (!state) return { cgst: "0", sgst: "0", igst: totalGst.toFixed(2) };
@@ -190,6 +191,7 @@ export default function TransactionsPage() {
     paymentMethod: "",
     companyBank: "",
     amount: "",
+    status: "",
   });
 
   useEffect(() => {
@@ -199,6 +201,7 @@ export default function TransactionsPage() {
         paymentMethod: openEdit?.paymentMethod || "",
         companyBank: openEdit?.companyBank || "",
         amount: openEdit?.amount || "",
+        status: openEdit?.status || "", // ✅ added
       });
     }
   }, [openEdit]);
@@ -428,16 +431,9 @@ export default function TransactionsPage() {
                     <TableCell>
                       <Button
                         className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() =>
-                          updatePaymentMutation.mutate({
-                            id: openEdit.id,
-                            ...editForm,
-                          })
-                        }
+                        onClick={() => setOpenEdit(p)} // <-- FIX
                       >
-                        {updatePaymentMutation.isPending
-                          ? "Saving..."
-                          : "Submit"}
+                        Edit
                       </Button>
                     </TableCell>
 
@@ -532,12 +528,15 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="Select Method" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  {paymentOptions.map((i) => (
+                    <SelectItem key={i.value} value={i.value}>
+                      {i.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <Select
+              {/* <Select
                 value={editForm.companyBank}
                 onValueChange={(v) =>
                   setEditForm({ ...editForm, companyBank: v })
@@ -549,6 +548,20 @@ export default function TransactionsPage() {
                 <SelectContent>
                   <SelectItem value="HDFC Bank">HDFC</SelectItem>
                   <SelectItem value="SBI Bank">SBI</SelectItem>
+                </SelectContent>
+              </Select> */}
+              <Select
+                value={editForm.status}
+                onValueChange={(v) => setEditForm({ ...editForm, status: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -564,12 +577,14 @@ export default function TransactionsPage() {
           <DialogFooter>
             <Button
               className="bg-blue-600 hover:bg-blue-700"
-              onClick={() =>
+              onClick={() => {
+                const payload = { ...editForm };
+                delete payload.companyBank; // 🔥 MUST REMOVE
                 updatePaymentMutation.mutate({
                   id: openEdit.id,
-                  ...editForm,
-                })
-              }
+                  ...payload,
+                });
+              }}
             >
               {updatePaymentMutation.isPending ? "Saving..." : "Submit"}
             </Button>

@@ -34,12 +34,12 @@ export const GET = apiHandler(async (_req: Request, context: any) => {
   return NextResponse.json(new ApiResponse(200, payment, message));
 });
 
-export const PUT = apiHandler(async (req: Request, context: any) => {
+export const PATCH = apiHandler(async (req: Request, context: any) => {
   const { id } = context.params;
 
-  const body = await req.json();
-
   if (!id) throw new ApiError(400, "payment ID is required");
+
+  const body = await req.json();
 
   delete body.id;
   delete body.createdAt;
@@ -55,6 +55,7 @@ export const PUT = apiHandler(async (req: Request, context: any) => {
     new ApiResponse(200, updatedPayment, "payment updated successfully")
   );
 });
+
 
 export const DELETE = apiHandler(async (_req: Request, context: any) => {
   const { id } = context.params;

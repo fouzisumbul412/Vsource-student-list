@@ -64,55 +64,45 @@ export default function RegistrationForm({
     setValue,
     handleSubmit,
     watch,
-    reset,
     formState: { errors },
   } = useForm<StudentRegistrationForm>({
     resolver: zodResolver(studentRegistrationSchema),
     mode: "onChange",
     reValidateMode: "onChange",
+    defaultValues: mode === "edit" ? defaultValues : undefined,
   });
 
-  // ===== watched values for controlled Selects =====
+  // state is needed to compute districts
   const stateValue = watch("state");
-  const nationalityValue = watch("nationality");
-  const countryValue = watch("country");
-  const districtValue = watch("district");
-  const abroadMastersValue = watch("abroadMasters");
-  const academicYearValue = watch("academicYear");
-  const officeCityValue = watch("officeCity");
-  const processedByValue = watch("processedBy");
-  const counselorNameValue = watch("counselorName");
-  const assigneeNameValue = watch("assigneeName");
-  const statusValue = watch("status");
-
   const districts = stateDistricts[stateValue] || [];
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
+  // only auto-set registration date on CREATE
   useEffect(() => {
-    setValue("registrationDate", todayStr, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  }, [setValue, todayStr]);
-
-  useEffect(() => {
-    if (defaultValues) {
-      reset(defaultValues);
+    if (mode === "create") {
+      setValue("registrationDate", todayStr, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
-  }, [defaultValues, reset]);
+  }, [mode, setValue, todayStr]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      const payload: FormData = {
+        ...data,
+        serviceCharge: Number(data.serviceCharge || 0),
+      };
+
       if (mode === "edit" && id) {
-        await studentRegistrationService.update(id, data);
+        await studentRegistrationService.update(id, payload);
         alert("Student updated successfully");
         router.push("/student-registration-list");
       } else {
-        await studentRegistrationService.create(data);
+        await studentRegistrationService.create(payload);
         alert("Student Registered Successfully");
-        reset();
         setValue("registrationDate", todayStr);
       }
     } catch (e: any) {
@@ -256,8 +246,7 @@ export default function RegistrationForm({
                   render={({ field }) => (
                     <Select
                       value={field.value || undefined}
-                      defaultValue={field.value || undefined}
-                      onValueChange={(v) => field.onChange(v)}
+                      onValueChange={field.onChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Nationality" />
@@ -323,14 +312,12 @@ export default function RegistrationForm({
                     render={({ field }) => (
                       <Select
                         value={field.value || undefined}
-                        defaultValue={field.value || undefined}
-                        onValueChange={(v) => field.onChange(v)}
+                        onValueChange={field.onChange}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Status" />
                         </SelectTrigger>
                         <SelectContent className="z-50 bg-white">
-                          {/* 👇 VERY IMPORTANT: value MUST match DB */}
                           <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                           <SelectItem value="HOLD">Hold</SelectItem>
                           <SelectItem value="CANCELLED">Cancelled</SelectItem>
@@ -369,26 +356,28 @@ export default function RegistrationForm({
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
+                {/* COUNTRY */}
                 <div>
                   <Label>Country*</Label>
-                  <Select
-                    value={countryValue || undefined}
-                    onValueChange={(v) =>
-                      setValue("country", v, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white">
-                      <SelectItem value="India">India</SelectItem>
-                      <SelectItem value="USA">USA</SelectItem>
-                      <SelectItem value="UK">UK</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="country"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Country" />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-white">
+                          <SelectItem value="India">India</SelectItem>
+                          <SelectItem value="USA">USA</SelectItem>
+                          <SelectItem value="UK">UK</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {errors.country && (
                     <p className="text-red-500 text-sm">
                       {errors.country.message}
@@ -396,69 +385,79 @@ export default function RegistrationForm({
                   )}
                 </div>
 
+                {/* STATE */}
                 <div>
                   <Label>State*</Label>
-                  <Select
-                    value={stateValue || undefined}
-                    onValueChange={(v) =>
-                      setValue("state", v, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select State" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white">
-                      <SelectItem value="Andhra Pradesh">
-                        Andhra Pradesh
-                      </SelectItem>
-                      <SelectItem value="Arunachal Pradesh">
-                        Arunachal Pradesh
-                      </SelectItem>
-                      <SelectItem value="Assam">Assam</SelectItem>
-                      <SelectItem value="Bihar">Bihar</SelectItem>
-                      <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
-                      <SelectItem value="Dadra and Nagar Haveli and Daman and Diu">
-                        Dadra and Nagar Haveli and Daman and Diu
-                      </SelectItem>
-                      <SelectItem value="Delhi">Delhi</SelectItem>
-                      <SelectItem value="Goa">Goa</SelectItem>
-                      <SelectItem value="Gujarat">Gujarat</SelectItem>
-                      <SelectItem value="Haryana">Haryana</SelectItem>
-                      <SelectItem value="Himachal Pradesh">
-                        Himachal Pradesh
-                      </SelectItem>
-                      <SelectItem value="Jammu and Kashmir">
-                        Jammu and Kashmir
-                      </SelectItem>
-                      <SelectItem value="Jharkhand">Jharkhand</SelectItem>
-                      <SelectItem value="Karnataka">Karnataka</SelectItem>
-                      <SelectItem value="Kerala">Kerala</SelectItem>
-                      <SelectItem value="Madhya Pradesh">
-                        Madhya Pradesh
-                      </SelectItem>
-                      <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                      <SelectItem value="Manipur">Manipur</SelectItem>
-                      <SelectItem value="Meghalaya">Meghalaya</SelectItem>
-                      <SelectItem value="Mizoram">Mizoram</SelectItem>
-                      <SelectItem value="Nagaland">Nagaland</SelectItem>
-                      <SelectItem value="Odisha">Odisha</SelectItem>
-                      <SelectItem value="Puducherry">Puducherry</SelectItem>
-                      <SelectItem value="Punjab">Punjab</SelectItem>
-                      <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                      <SelectItem value="Sikkim">Sikkim</SelectItem>
-                      <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                      <SelectItem value="Telangana">Telangana</SelectItem>
-                      <SelectItem value="Tripura">Tripura</SelectItem>
-                      <SelectItem value="Uttar Pradesh">
-                        Uttar Pradesh
-                      </SelectItem>
-                      <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
-                      <SelectItem value="West Bengal">West Bengal</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="state"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select State" />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-white">
+                          <SelectItem value="Andhra Pradesh">
+                            Andhra Pradesh
+                          </SelectItem>
+                          <SelectItem value="Arunachal Pradesh">
+                            Arunachal Pradesh
+                          </SelectItem>
+                          <SelectItem value="Assam">Assam</SelectItem>
+                          <SelectItem value="Bihar">Bihar</SelectItem>
+                          <SelectItem value="Chhattisgarh">
+                            Chhattisgarh
+                          </SelectItem>
+                          <SelectItem value="Dadra and Nagar Haveli and Daman and Diu">
+                            Dadra and Nagar Haveli and Daman and Diu
+                          </SelectItem>
+                          <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="Goa">Goa</SelectItem>
+                          <SelectItem value="Gujarat">Gujarat</SelectItem>
+                          <SelectItem value="Haryana">Haryana</SelectItem>
+                          <SelectItem value="Himachal Pradesh">
+                            Himachal Pradesh
+                          </SelectItem>
+                          <SelectItem value="Jammu and Kashmir">
+                            Jammu and Kashmir
+                          </SelectItem>
+                          <SelectItem value="Jharkhand">Jharkhand</SelectItem>
+                          <SelectItem value="Karnataka">Karnataka</SelectItem>
+                          <SelectItem value="Kerala">Kerala</SelectItem>
+                          <SelectItem value="Madhya Pradesh">
+                            Madhya Pradesh
+                          </SelectItem>
+                          <SelectItem value="Maharashtra">
+                            Maharashtra
+                          </SelectItem>
+                          <SelectItem value="Manipur">Manipur</SelectItem>
+                          <SelectItem value="Meghalaya">Meghalaya</SelectItem>
+                          <SelectItem value="Mizoram">Mizoram</SelectItem>
+                          <SelectItem value="Nagaland">Nagaland</SelectItem>
+                          <SelectItem value="Odisha">Odisha</SelectItem>
+                          <SelectItem value="Puducherry">Puducherry</SelectItem>
+                          <SelectItem value="Punjab">Punjab</SelectItem>
+                          <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                          <SelectItem value="Sikkim">Sikkim</SelectItem>
+                          <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                          <SelectItem value="Telangana">Telangana</SelectItem>
+                          <SelectItem value="Tripura">Tripura</SelectItem>
+                          <SelectItem value="Uttar Pradesh">
+                            Uttar Pradesh
+                          </SelectItem>
+                          <SelectItem value="Uttarakhand">
+                            Uttarakhand
+                          </SelectItem>
+                          <SelectItem value="West Bengal">
+                            West Bengal
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {errors.state && (
                     <p className="text-red-500 text-sm">
                       {errors.state.message}
@@ -478,36 +477,38 @@ export default function RegistrationForm({
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
+                {/* DISTRICT */}
                 <div>
                   <Label>District*</Label>
-                  <Select
-                    disabled={!stateValue}
-                    value={districtValue || undefined}
-                    onValueChange={(v) =>
-                      setValue("district", v, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select District" />
-                    </SelectTrigger>
+                  <Controller
+                    name="district"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        disabled={!stateValue}
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select District" />
+                        </SelectTrigger>
 
-                    <SelectContent className="z-50 bg-white">
-                      {districts.length > 0 ? (
-                        districts.map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {d}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-sm text-gray-400">
-                          Select a state first
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                        <SelectContent className="z-50 bg-white">
+                          {districts.length > 0 ? (
+                            districts.map((d) => (
+                              <SelectItem key={d} value={d}>
+                                {d}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-gray-400">
+                              Select a state first
+                            </div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
 
                   {errors.district && (
                     <p className="text-red-500 text-sm">
@@ -516,6 +517,7 @@ export default function RegistrationForm({
                   )}
                 </div>
 
+                {/* PINCODE */}
                 <div>
                   <Label>Pincode*</Label>
                   <Controller
@@ -555,42 +557,43 @@ export default function RegistrationForm({
               {/* ABROAD MASTERS */}
               <div>
                 <Label>Abroad Masters*</Label>
-                <Select
-                  value={abroadMastersValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("abroadMasters", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Masters" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    <SelectItem value="ABROADMASTERS-USA">
-                      ABROADMASTERS-USA
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-UK">
-                      ABROADMASTERS-UK
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-AUSTRALIA">
-                      ABROADMASTERS-AUSTRALIA
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-CANADA">
-                      ABROADMASTERS-CANADA
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-IRELAND">
-                      ABROADMASTERS-IRELAND
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-FRANCE">
-                      ABROADMASTERS-FRANCE
-                    </SelectItem>
-                    <SelectItem value="ABROADMASTERS-GERMANY">
-                      ABROADMASTERS-GERMANY
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="abroadMasters"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Masters" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        <SelectItem value="ABROADMASTERS-USA">
+                          ABROADMASTERS-USA
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-UK">
+                          ABROADMASTERS-UK
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-AUSTRALIA">
+                          ABROADMASTERS-AUSTRALIA
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-CANADA">
+                          ABROADMASTERS-CANADA
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-IRELAND">
+                          ABROADMASTERS-IRELAND
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-FRANCE">
+                          ABROADMASTERS-FRANCE
+                        </SelectItem>
+                        <SelectItem value="ABROADMASTERS-GERMANY">
+                          ABROADMASTERS-GERMANY
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.abroadMasters && (
                   <p className="text-red-500 text-sm">
                     {errors.abroadMasters.message}
@@ -647,28 +650,30 @@ export default function RegistrationForm({
                 )}
               </div>
 
+              {/* ACADEMIC YEAR */}
               <div>
                 <Label>Academic Year*</Label>
-                <Select
-                  value={academicYearValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("academicYear", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Year" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    {academicYearOptions.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="academicYear"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Year" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        {academicYearOptions.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.academicYear && (
                   <p className="text-red-500 text-sm">
                     {errors.academicYear.message}
@@ -676,37 +681,45 @@ export default function RegistrationForm({
                 )}
               </div>
 
+              {/* OFFICE CITY */}
               <div>
                 <Label>Office City*</Label>
-                <Select
-                  value={officeCityValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("officeCity", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Office" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    <SelectItem value="HYDERABAD_VS_HYD">Hyderabad</SelectItem>
-                    <SelectItem value="VIJAYAWADA_VS_BZA">
-                      Vijayawada
-                    </SelectItem>
-                    <SelectItem value="TIRUPATI_VS_TIR">Tirupati</SelectItem>
-                    <SelectItem value="VIZAG_VS_VIZAG">Vizag</SelectItem>
-                    <SelectItem value="MUMBAI_VS_MUM">Mumbai</SelectItem>
-                    <SelectItem value="BANGALURU_VS_BAN">Bengaluru</SelectItem>
-                    <SelectItem value="PUNE_VS_PUN">Pune</SelectItem>
-                    <SelectItem value="ASSOCIATES_VS_MOU">
-                      Associates
-                    </SelectItem>
-                    <SelectItem value="ONLINE">Online</SelectItem>
-                    <SelectItem value="GEORGIA">Georgia</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="officeCity"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Office" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        <SelectItem value="HYDERABAD_VS_HYD">
+                          Hyderabad
+                        </SelectItem>
+                        <SelectItem value="VIJAYAWADA_VS_BZA">
+                          Vijayawada
+                        </SelectItem>
+                        <SelectItem value="TIRUPATI_VS_TIR">
+                          Tirupati
+                        </SelectItem>
+                        <SelectItem value="VIZAG_VS_VIZAG">Vizag</SelectItem>
+                        <SelectItem value="MUMBAI_VS_MUM">Mumbai</SelectItem>
+                        <SelectItem value="BANGALURU_VS_BAN">
+                          Bengaluru
+                        </SelectItem>
+                        <SelectItem value="PUNE_VS_PUN">Pune</SelectItem>
+                        <SelectItem value="ASSOCIATES_VS_MOU">
+                          Associates
+                        </SelectItem>
+                        <SelectItem value="ONLINE">Online</SelectItem>
+                        <SelectItem value="GEORGIA">Georgia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.officeCity && (
                   <p className="text-red-500 text-sm">
                     {errors.officeCity.message}
@@ -719,24 +732,25 @@ export default function RegistrationForm({
               {/* PROCESSED BY */}
               <div>
                 <Label>Processed By*</Label>
-                <Select
-                  value={processedByValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("processedBy", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Team" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    <SelectItem value="TEAM-1">TEAM-1</SelectItem>
-                    <SelectItem value="TEAM-2">TEAM-2</SelectItem>
-                    <SelectItem value="TEAM-ONLINE">TEAM-ONLINE</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="processedBy"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Team" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        <SelectItem value="TEAM-1">TEAM-1</SelectItem>
+                        <SelectItem value="TEAM-2">TEAM-2</SelectItem>
+                        <SelectItem value="TEAM-ONLINE">TEAM-ONLINE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.processedBy && (
                   <p className="text-red-500 text-sm">
                     {errors.processedBy.message}
@@ -747,49 +761,60 @@ export default function RegistrationForm({
               {/* COUNSELOR */}
               <div>
                 <Label>Counselor Name*</Label>
-                <Select
-                  value={counselorNameValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("counselorName", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Counselor" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    <SelectItem value="R PUSHPALATHA">R PUSHPALATHA</SelectItem>
-                    <SelectItem value="MORA NAVYA">MORA NAVYA</SelectItem>
-                    <SelectItem value="GOTHULA SRINATH">
-                      GOTHULA SRINATH
-                    </SelectItem>
-                    <SelectItem value="M KAVYA SREE-ONLINE">
-                      M KAVYA SREE-ONLINE
-                    </SelectItem>
-                    <SelectItem value="MOHD ZAKIR-ONLINE">
-                      MOHD ZAKIR-ONLINE
-                    </SelectItem>
-                    <SelectItem value="M SRINIVAS-ONLINE">
-                      M SRINIVAS-ONLINE
-                    </SelectItem>
-                    <SelectItem value="CH V SHASHI KUMAR">
-                      CH V SHASHI KUMAR
-                    </SelectItem>
-                    <SelectItem value="V KIRAN KUMAR">V KIRAN KUMAR</SelectItem>
-                    <SelectItem value="ADMIN">ADMIN</SelectItem>
-                    <SelectItem value="SHAIK GAFOOR">SHAIK GAFOOR</SelectItem>
-                    <SelectItem value="GUMPU SREENATH">
-                      GUMPU SREENATH
-                    </SelectItem>
-                    <SelectItem value="BOYA SAI TEJA">BOYA SAI TEJA</SelectItem>
-                    <SelectItem value="MUNJALA RAJASHEKHAR">
-                      MUNJALA RAJASHEKHAR
-                    </SelectItem>
-                    <SelectItem value="K NARUN REDDY">K NARUN REDDY</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="counselorName"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Counselor" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        <SelectItem value="R PUSHPALATHA">
+                          R PUSHPALATHA
+                        </SelectItem>
+                        <SelectItem value="MORA NAVYA">MORA NAVYA</SelectItem>
+                        <SelectItem value="GOTHULA SRINATH">
+                          GOTHULA SRINATH
+                        </SelectItem>
+                        <SelectItem value="M KAVYA SREE-ONLINE">
+                          M KAVYA SREE-ONLINE
+                        </SelectItem>
+                        <SelectItem value="MOHD ZAKIR-ONLINE">
+                          MOHD ZAKIR-ONLINE
+                        </SelectItem>
+                        <SelectItem value="M SRINIVAS-ONLINE">
+                          M SRINIVAS-ONLINE
+                        </SelectItem>
+                        <SelectItem value="CH V SHASHI KUMAR">
+                          CH V SHASHI KUMAR
+                        </SelectItem>
+                        <SelectItem value="V KIRAN KUMAR">
+                          V KIRAN KUMAR
+                        </SelectItem>
+                        <SelectItem value="ADMIN">ADMIN</SelectItem>
+                        <SelectItem value="SHAIK GAFOOR">
+                          SHAIK GAFOOR
+                        </SelectItem>
+                        <SelectItem value="GUMPU SREENATH">
+                          GUMPU SREENATH
+                        </SelectItem>
+                        <SelectItem value="BOYA SAI TEJA">
+                          BOYA SAI TEJA
+                        </SelectItem>
+                        <SelectItem value="MUNJALA RAJASHEKHAR">
+                          MUNJALA RAJASHEKHAR
+                        </SelectItem>
+                        <SelectItem value="K NARUN REDDY">
+                          K NARUN REDDY
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.counselorName && (
                   <p className="text-red-500 text-sm">
                     {errors.counselorName.message}
@@ -800,68 +825,100 @@ export default function RegistrationForm({
               {/* ASSIGNEE */}
               <div>
                 <Label>Assignee Name*</Label>
-                <Select
-                  value={assigneeNameValue || undefined}
-                  onValueChange={(v) =>
-                    setValue("assigneeName", v, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Assignee" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    <SelectItem value="MUNJALA RAJASHEKAR">
-                      MUNJALA RAJASHEKAR
-                    </SelectItem>
-                    <SelectItem value="SHAIK GAFOOR">SHAIK GAFOOR</SelectItem>
-                    <SelectItem value="GUMPU SREENATH">
-                      GUMPU SREENATH
-                    </SelectItem>
-                    <SelectItem value="JANGAPELLI RAJU">
-                      JANGAPELLI RAJU
-                    </SelectItem>
-                    <SelectItem value="SHABAD SRUTHI">SHABAD SRUTHI</SelectItem>
-                    <SelectItem value="BANDA SPANDANA">
-                      BANDA SPANDANA
-                    </SelectItem>
-                    <SelectItem value="V KIRAN KUMAR">V KIRAN KUMAR</SelectItem>
-                    <SelectItem value="BOYA SAI TEJA">BOYA SAI TEJA</SelectItem>
-                    <SelectItem value="R SANDHYA RANI">
-                      R SANDHYA RANI
-                    </SelectItem>
-                    <SelectItem value="KARTIK REDDY">KARTIK REDDY</SelectItem>
-                    <SelectItem value="P SAI NIKHITHA">
-                      P SAI NIKHITHA
-                    </SelectItem>
-                    <SelectItem value="P NITHIN VARMA">
+                <Controller
+                  name="assigneeName"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Assignee" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-white">
+                        <SelectItem value="MUNJALA RAJASHEKAR">
+                          MUNJALA RAJASHEKAR
+                        </SelectItem>
+                        <SelectItem value="SHAIK GAFOOR">
+                          SHAIK GAFOOR
+                        </SelectItem>
+                        <SelectItem value="GUMPU SREENATH">
+                          GUMPU SREENATH
+                        </SelectItem>
+                        <SelectItem value="JANGAPELLI RAJU">
+                          JANGAPELLI RAJU
+                        </SelectItem>
+                        {/* <SelectItem value="SHABAD SRUTHI">SHABAD SRUTHI</SelectItem> */}
+                        <SelectItem value="BANDA SPANDANA">
+                          BANDA SPANDANA
+                        </SelectItem>
+                        <SelectItem value="V KIRAN KUMAR">
+                          V KIRAN KUMAR
+                        </SelectItem>
+                        <SelectItem value="BOYA SAI TEJA">
+                          BOYA SAI TEJA
+                        </SelectItem>
+                        <SelectItem value="R SANDHYA RANI">
+                          R SANDHYA RANI
+                        </SelectItem>
+                        {/* <SelectItem value="KARTIK REDDY">KARTIK REDDY</SelectItem> */}
+                        <SelectItem value="P SAI NIKHITHA">
+                          P SAI NIKHITHA
+                        </SelectItem>
+                        {/* <SelectItem value="P NITHIN VARMA">
                       P NITHIN VARMA
-                    </SelectItem>
-                    <SelectItem value="K NARUN REDDY">K NARUN REDDY</SelectItem>
-                    <SelectItem value="A ANUSHA">A ANUSHA</SelectItem>
-                    <SelectItem value="MORA NAVYA">MORA NAVYA</SelectItem>
-                    <SelectItem value="CHV SHASHI KUMAR">
-                      CHV SHASHI KUMAR
-                    </SelectItem>
-                    <SelectItem value="MAHESH PATIL">MAHESH PATIL</SelectItem>
-                    <SelectItem value="BHARATH MUDALAM">
+                    </SelectItem> */}
+                        <SelectItem value="K NARUN REDDY">
+                          K NARUN REDDY
+                        </SelectItem>
+                        {/* <SelectItem value="A ANUSHA">A ANUSHA</SelectItem> */}
+                        <SelectItem value="MORA NAVYA">MORA NAVYA</SelectItem>
+                        <SelectItem value="CHV SHASHI KUMAR">
+                          CHV SHASHI KUMAR
+                        </SelectItem>
+                        <SelectItem value="MAHESH PATIL">
+                          MAHESH PATIL
+                        </SelectItem>
+                        {/* <SelectItem value="BHARATH MUDALAM">
                       BHARATH MUDALAM
-                    </SelectItem>
-                    <SelectItem value="R PUSHPALATHA">R PUSHPALATHA</SelectItem>
-                    <SelectItem value="P RADHA KRISHNA">
-                      P RADHA KRISHNA
-                    </SelectItem>
-                    <SelectItem value="M SATWIK VARMA">
+                    </SelectItem> */}
+                        <SelectItem value="R PUSHPALATHA">
+                          R PUSHPALATHA
+                        </SelectItem>
+                        <SelectItem value="P RADHA KRISHNA">
+                          P RADHA KRISHNA
+                        </SelectItem>
+                        {/* <SelectItem value="M SATWIK VARMA">
                       M SATWIK VARMA
-                    </SelectItem>
-                    <SelectItem value="K RUCHITHA">K RUCHITHA</SelectItem>
-                    <SelectItem value="B BHANU SAI PRAKASH">
-                      B BHANU SAI PRAKASH
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                    </SelectItem> */}
+                        {/* <SelectItem value="K RUCHITHA">K RUCHITHA</SelectItem> */}
+                        <SelectItem value="B BHANU SAI PRAKASH">
+                          B BHANU SAI PRAK
+                          <SelectItem value="MUNEER">MUNEER</SelectItem>
+                          <SelectItem value="Y VIJAY">Y VIJAY</SelectItem>
+                          <SelectItem value="S PAVAN KRISHNA">
+                            S PAVAN KRISHNA
+                          </SelectItem>
+                          <SelectItem value="A RAKESH">A RAKESH</SelectItem>
+                          <SelectItem value="S NAGA VENKATESH">
+                            S NAGA VENKATESH
+                          </SelectItem>
+                          <SelectItem value="M PAVAN KUMAR">
+                            M PAVAN KUMAR
+                          </SelectItem>
+                          <SelectItem value="R SUBRAHMANYAM">
+                            R SUBRAHMANYAM
+                          </SelectItem>
+                          <SelectItem value="A BHANU SAI RAM">
+                            A BHANU SAI RAM
+                          </SelectItem>
+                          <SelectItem value="U VINAY">U VINAY</SelectItem>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.assigneeName && (
                   <p className="text-red-500 text-sm">
                     {errors.assigneeName.message}
