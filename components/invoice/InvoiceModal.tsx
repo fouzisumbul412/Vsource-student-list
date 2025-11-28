@@ -206,12 +206,13 @@ export function InvoiceModal({ data, onClose }: any) {
           </div>
         </div>
       </div>
-      <div className="no-print fixed bottom-6 right-6 flex gap-3">
-        <Button variant="outline" onClick={handleDownloadPdf}>
-          Download PDF
-        </Button>
-        <Button onClick={handlePrint}>Print A4</Button>
-      </div>
+  <div className="no-print fixed bottom-6 right-6 flex gap-3">
+  <Button variant="outline" onClick={handleDownloadPdf}>
+    Download PDF
+  </Button>
+  <Button onClick={handlePrint}>Print A4</Button>
+</div>
+
     </div>
   );
 }

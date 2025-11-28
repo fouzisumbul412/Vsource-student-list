@@ -130,3 +130,19 @@ body {
     @apply bg-background text-foreground;
   }
 }
+@media print {
+  @page {
+    margin: 0;        /* removes browser header/footer margin */
+    size: A4;         /* perfect A4 */
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
