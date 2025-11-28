@@ -3,64 +3,85 @@ import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/utils/ApiError";
 import { apiHandler } from "@/utils/apiHandler";
 import { ApiResponse } from "@/utils/ApiResponse";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
+import jwt from "jsonwebtoken";
+import { getChangedFields, STUDENT_ALLOWED_FIELDS } from "@/utils/auditFields";
 
 export const PUT = apiHandler(async (req: Request, context: any) => {
   const { id } = context.params;
-  if (!id) throw new ApiError(400, "student ID is required");
-
   const body = await req.json();
 
-  // 🔒 Build a clean payload with correct types
-  const data = {
-    // Personal Information
-    studentName: body.studentName as string,
-    nationality: body.nationality as string,
-    fathersName: body.fathersName as string,
-    dateOfBirth: body.dateOfBirth
-      ? new Date(body.dateOfBirth)
-      : undefined,
-    mobileNumber: body.mobileNumber as string,
-    email: body.email as string,
-    parentMobile: body.parentMobile as string,
-    gender: body.gender as string,
-    registrationDate: body.registrationDate
-      ? new Date(body.registrationDate)
-      : undefined,
+  const token = cookies().get("token")?.value;
+  let currentUser: { id: string; role: string | null } | null = null;
 
-    // Present Address
-    addressLine1: body.addressLine1 as string,
-    addressLine2: body.addressLine2 ?? null,
-    country: body.country as string,
-    state: body.state as string,
-    city: body.city as string,
-    district: body.district as string,
-    pincode: body.pincode as string,
+  if (!token) throw new ApiError(401, "Not authenticated");
 
-    // Course Details
-    abroadMasters: body.abroadMasters as string,
-    courseName: body.courseName as string,
-    serviceCharge:
-      body.serviceCharge === "" || body.serviceCharge == null
-        ? 0
-        : Number(body.serviceCharge),
-    academicYear: body.academicYear as string,
-    processedBy: body.processedBy as string,
-    counselorName: body.counselorName as string,
-    officeCity: body.officeCity as string,
-    assigneeName: body.assigneeName as string,
-    passportNumber: body.passportNumber ?? null,
+  let decoded: any;
 
-    // Status (enum)
-    status: body.status
-      ? (body.status as RegistrationStatus)
-      : undefined,
-  };
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    currentUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+  } catch (error) {
+    throw new ApiError(401, "Invalid or expired token");
+  }
+
+  delete body.id;
+  delete body.createdAt;
+  delete body.updatedAt;
+  delete body.stid;
+
+  const oldStudent = await prisma.studentRegistration.findUnique({
+    where: { id },
+  });
+
+  if (!oldStudent) throw new ApiError(404, `No student found with ID: ${id}`);
 
   const updatedStudent = await prisma.studentRegistration.update({
     where: { id },
-    data,
+    data: {
+      ...body,
+      dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
+      registrationDate: body.registrationDate
+        ? new Date(body.registrationDate)
+        : undefined,
+    },
+  });
+
+  if (!updatedStudent)
+    throw new ApiError(404, `No student found with ID: ${id}`);
+
+  const newStudent = await prisma.studentRegistration.findUnique({
+    where: { id },
+  });
+
+  const { oldValues, newValues } = getChangedFields(
+    oldStudent,
+    newStudent!,
+    STUDENT_ALLOWED_FIELDS
+  );
+
+  await prisma.auditLog.create({
+    data: {
+      userId: currentUser?.id || null,
+      role: currentUser?.role || null,
+      action: "UPDATE",
+      module: "StudentRegistration",
+      recordId: updatedStudent.id,
+      oldValues: oldValues,
+      newValues: newValues,
+      ipAddress:
+        req.headers.get("x-forwarded-for") ||
+        req.headers.get("x-real-ip") ||
+        "Unknown",
+      userAgent: req.headers.get("user-agent") || "Unknown",
+    },
   });
 
   return NextResponse.json(
@@ -68,11 +89,51 @@ export const PUT = apiHandler(async (req: Request, context: any) => {
   );
 });
 
-
-export const DELETE = apiHandler(async (_req: Request, context: any) => {
+export const DELETE = apiHandler(async (req: Request, context: any) => {
   const { id } = context.params;
   if (!id) throw new ApiError(400, "student ID is required");
-  await prisma.studentRegistration.delete({ where: { id } });
+
+  const token = cookies().get("token")?.value;
+  let currentUser: { id: string; role: string | null } | null = null;
+
+  if (!token) throw new ApiError(401, "Not authenticated");
+
+  let decoded: any;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    currentUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+  } catch (error) {
+    throw new ApiError(401, "Invalid or expired token");
+  }
+
+  const existingStudent = await prisma.studentRegistration.delete({
+    where: { id },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: currentUser?.id || null,
+      role: currentUser?.role || null,
+      action: "DELETE",
+      module: "StudentRegistration",
+      recordId: existingStudent.id,
+      oldValues: existingStudent,
+      newValues: undefined,
+      ipAddress:
+        req.headers.get("x-forwarded-for") ||
+        req.headers.get("x-real-ip") ||
+        "Unknown",
+      userAgent: req.headers.get("user-agent") || "Unknown",
+    },
+  });
+
   return NextResponse.json(
     new ApiResponse(200, null, "Student deleted successfully")
   );

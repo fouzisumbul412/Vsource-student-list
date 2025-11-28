@@ -24,6 +24,7 @@ import {
   CreditCard,
   FileText,
   Users,
+  Footprints,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -43,6 +44,7 @@ const menuItems = [
   { label: "Transactions List", href: "/transactions", icon: FileText },
   { label: "Sub Admin Form", href: "/sub-admin", icon: Users },
   { label: "Employee Logins", href: "/employee-logins", icon: Users },
+  { label: "Audit Logs", href: "/audit-log", icon: Footprints },
 ];
 
 export function AppSidebar() {

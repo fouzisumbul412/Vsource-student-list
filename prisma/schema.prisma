@@ -23,6 +23,7 @@ model User {
   updatedAt  DateTime @updatedAt
 
   employeeLoginDetails EmployeeLoginDetail[]
+  auditLog             AuditLog[]
 }
 
 model EmployeeLoginDetail {
@@ -122,4 +123,27 @@ enum PaymentStatus {
   APPROVED
   PENDING
   FAILED
+}
+
+model AuditLog {
+  id        String          @id @default(uuid())
+  userId    String?
+  role      String?
+  module    String
+  recordId  String
+  action    AuditActionType
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+enum AuditActionType {
+  CREATE
+  UPDATE
+  DELETE
 }

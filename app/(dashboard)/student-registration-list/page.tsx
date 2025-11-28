@@ -298,101 +298,106 @@ export default function StudentRegistrationList() {
 
         {!isLoading && (
           <>
-            <Table className="border border-gray-300 rounded-sm">
-              <TableHeader>
-                <TableRow className="border-b border-gray-300">
-                  <TableHead className="border-r">S.No</TableHead>
-                  <TableHead className="border-r">StdId</TableHead>
-                  <TableHead className="border-r">Team</TableHead>
-                  <TableHead className="border-r">Assignee</TableHead>
-                  <TableHead className="border-r">Counsellor</TableHead>
-                  <TableHead className="border-r">Student Name</TableHead>
-                  <TableHead className="border-r">Mobile Number</TableHead>
-                  <TableHead className="border-r">Email</TableHead>
-                  <TableHead className="border-r">Masters</TableHead>
-                  <TableHead className="border-r">Father Name</TableHead>
-                  <TableHead className="border-r">Father Mobile</TableHead>
-                  <TableHead className="border-r">Town</TableHead>
-                  <TableHead className="border-r">Status</TableHead>
-                  <TableHead className="border-r text-center">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {filtered.map((item: any, index: number) => (
-                  <TableRow key={item.id} className="hover:bg-gray-50 border-b">
-                    <TableCell className="border-r">{index + 1}</TableCell>
-                    <TableCell className="border-r">{item.stid}</TableCell>
-                    <TableCell className="border-r">
-                      {item.processedBy}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.assigneeName}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.counselorName}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.studentName}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.mobileNumber}
-                    </TableCell>
-                    <TableCell className="border-r">{item.email}</TableCell>
-                    <TableCell className="border-r">
-                      {item.abroadMasters}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.fathersName}
-                    </TableCell>
-                    <TableCell className="border-r">
-                      {item.parentMobile}
-                    </TableCell>
-                    <TableCell className="border-r">{item.city}</TableCell>
-                    <TableCell className="border-r">
-                      <span
-                        className={cn(
-                          "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
-                          {
-                            "bg-green-100 text-green-700":
-                              item.status === "CONFIRMED",
-                            "bg-yellow-100 text-yellow-700":
-                              item.status === "PENDING",
-                            "bg-red-100 text-red-700":
-                              item.status === "REJECTED",
-                          }
-                        )}
-                      >
-                        {item.status}
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="border-r text-center flex justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-blue-600 hover:bg-blue-50"
-                        onClick={() =>
-                          router.push(`/student-registration/${item.id}`)
-                        }
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:bg-red-50"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+            <div className="border border-gray-300 rounded-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-gray-300">
+                    <TableHead className="border-r">S.No</TableHead>
+                    <TableHead className="border-r">StdId</TableHead>
+                    <TableHead className="border-r">Team</TableHead>
+                    <TableHead className="border-r">Assignee</TableHead>
+                    <TableHead className="border-r">Counsellor</TableHead>
+                    <TableHead className="border-r">Student Name</TableHead>
+                    <TableHead className="border-r">Mobile Number</TableHead>
+                    <TableHead className="border-r">Email</TableHead>
+                    <TableHead className="border-r">Masters</TableHead>
+                    <TableHead className="border-r">Father Name</TableHead>
+                    <TableHead className="border-r">Father Mobile</TableHead>
+                    <TableHead className="border-r">Town</TableHead>
+                    <TableHead className="border-r">Status</TableHead>
+                    <TableHead className="border-r text-center">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {filtered.map((item: any, index: number) => (
+                    <TableRow
+                      key={item.id}
+                      className="hover:bg-gray-50 border-b"
+                    >
+                      <TableCell className="border-r">{index + 1}</TableCell>
+                      <TableCell className="border-r">{item.stid}</TableCell>
+                      <TableCell className="border-r">
+                        {item.processedBy}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.assigneeName}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.counselorName}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.studentName}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.mobileNumber}
+                      </TableCell>
+                      <TableCell className="border-r">{item.email}</TableCell>
+                      <TableCell className="border-r">
+                        {item.abroadMasters}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.fathersName}
+                      </TableCell>
+                      <TableCell className="border-r">
+                        {item.parentMobile}
+                      </TableCell>
+                      <TableCell className="border-r">{item.city}</TableCell>
+                      <TableCell className="border-r">
+                        <span
+                          className={cn(
+                            "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
+                            {
+                              "bg-green-100 text-green-700":
+                                item.status === "CONFIRMED",
+                              "bg-yellow-100 text-yellow-700":
+                                item.status === "PENDING",
+                              "bg-red-100 text-red-700":
+                                item.status === "REJECTED",
+                            }
+                          )}
+                        >
+                          {item.status}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="border-r text-center flex justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-blue-600 hover:bg-blue-50"
+                          onClick={() =>
+                            router.push(`/student-registration/${item.id}`)
+                          }
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
             {filtered.length === 0 && (
               <p className="text-center py-4 text-slate-500">
