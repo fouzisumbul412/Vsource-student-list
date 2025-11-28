@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AuthUser } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 
@@ -12,28 +12,24 @@ interface UseAuthResult {
 }
 
 export function useAuth(): UseAuthResult {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data,
+    error,
+    isLoading,
+    refetch: refresh,
+  } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      const res = await authService.me();
+      return res.data.user;
+    },
+    retry: false,
+  });
 
-  const load = () => {
-    setLoading(true);
-    authService
-      .me()
-      .then((res) => {
-        setUser(res.data.user);
-        setError(null);
-      })
-      .catch((err) => {
-        setUser(null);
-        setError(err?.message ?? "Failed to load user");
-      })
-      .finally(() => setLoading(false));
+  return {
+    user: data ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    refresh,
   };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  return { user, loading, error, refresh: load };
 }

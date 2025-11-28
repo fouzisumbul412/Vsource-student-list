@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { Sidebar } from "./sidebar";
-import { TopNav } from "./top-nav"; 
+import { TopNav } from "./top-nav";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutComponent({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const { loading, error } = useAuth();
 
@@ -40,3 +40,5 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+export const AdminLayout = React.memo(AdminLayoutComponent);

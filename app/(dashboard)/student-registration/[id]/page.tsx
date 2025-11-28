@@ -3,9 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import RegistrationForm from "@/components/student-registration/RegistrationForm";
-import { Sidebar } from "@/components/layout/sidebar";
-import { TopNav } from "@/components/layout/top-nav";
-import { useState } from "react";
 
 export default function EditStudentPage({
   params,
@@ -13,7 +10,6 @@ export default function EditStudentPage({
   params: { id: string };
 }) {
   const { id } = params;
-  const [collapsed, setCollapsed] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student-registration", id],
@@ -43,17 +39,8 @@ export default function EditStudentPage({
   }
 
   return (
-    <div className="flex w-full bg-slate-100 min-h-screen">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <div className="flex-1 min-h-screen">
-        <TopNav
-          sidebarCollapsed={collapsed}
-          onToggleSidebar={() => setCollapsed((c) => !c)}
-        />
-        <div className="p-4">
-          <RegistrationForm mode="edit" id={id} defaultValues={data} />
-        </div>
-      </div>
+    <div className="p-4">
+      <RegistrationForm mode="edit" id={id} defaultValues={data} />
     </div>
   );
 }
