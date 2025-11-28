@@ -287,7 +287,7 @@ export default function StudentRegistrationList() {
       </div>
 
       {/* ---------------- TABLE VIEW (DESKTOP) ---------------- */}
-      <div className="hidden md:block overflow-x-scroll mt-6">
+      <div className="hidden md:block  mt-6">
         {isLoading && (
           <p className="text-center py-4 text-slate-500">Loading…</p>
         )}
