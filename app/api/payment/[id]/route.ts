@@ -10,7 +10,7 @@ export const GET = apiHandler(async (_req: Request, context: any) => {
   if (!id) throw new ApiError(400, "payment student id is required");
 
   const payment = await prisma.payment.findUnique({
-    where: { studentId: id },
+    where: { id },
     include: {
       student: true,
     },
