@@ -14,6 +14,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -24,6 +25,7 @@ import {
   FileText,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -44,6 +46,7 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const { state } = useSidebar();
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
   return (
@@ -52,7 +55,29 @@ export function AppSidebar() {
         {/* Logo Section */}
 
         <div className="flex items-center px-4 py-4">
-          <Logo />
+          {state !== "collapsed" ? (
+            <div className="relative h-10 w-60">
+              <Image
+                src="/assets/logo.webp"
+                alt="VSource Education"
+                width={80}
+                height={80}
+                className="object-cover rounded-sm"
+                priority
+              />
+            </div>
+          ) : (
+            <div className="relative h-10 w-60">
+              <Image
+                src="/assets/logo-small.png"
+                alt="VSource Education"
+                height={80}
+                width={80}
+                className="object-cover rounded-sm "
+                priority
+              />
+            </div>
+          )}
         </div>
 
         <SidebarGroup>
@@ -85,7 +110,9 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-slate-200 px-4 py-3 text-[11px] text-slate-500">
-        © {new Date().getFullYear()} VSource Education
+        {state !== "collapsed"
+          ? `© ${new Date().getFullYear()} VSource Education`
+          : `© ${new Date().getFullYear()}`}
       </SidebarFooter>
     </Sidebar>
   );

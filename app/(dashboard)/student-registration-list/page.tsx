@@ -24,6 +24,7 @@ import * as XLSX from "xlsx";
 import { Pencil, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { cn } from "@/lib/utils";
 
 // (optional) util if you still want static year options somewhere else
 // but here we’ll derive years from data itself.
@@ -297,7 +298,7 @@ export default function StudentRegistrationList() {
 
         {!isLoading && (
           <>
-            <Table className="border border-gray-300">
+            <Table className="border border-gray-300 rounded-sm">
               <TableHeader>
                 <TableRow className="border-b border-gray-300">
                   <TableHead className="border-r">S.No</TableHead>
@@ -350,18 +351,41 @@ export default function StudentRegistrationList() {
                       {item.parentMobile}
                     </TableCell>
                     <TableCell className="border-r">{item.city}</TableCell>
-                    <TableCell className="border-r">{item.status}</TableCell>
+                    <TableCell className="border-r">
+                      <span
+                        className={cn(
+                          "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
+                          {
+                            "bg-green-100 text-green-700":
+                              item.status === "CONFIRMED",
+                            "bg-yellow-100 text-yellow-700":
+                              item.status === "PENDING",
+                            "bg-red-100 text-red-700":
+                              item.status === "REJECTED",
+                          }
+                        )}
+                      >
+                        {item.status}
+                      </span>
+                    </TableCell>
+
                     <TableCell className="border-r text-center flex justify-center gap-2">
                       <Button
-                        size="sm"
-                        variant="outline"
+                        variant="ghost"
+                        size="icon"
+                        className="text-blue-600 hover:bg-blue-50"
                         onClick={() =>
                           router.push(`/student-registration/${item.id}`)
                         }
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" onClick={() => handleDelete(item.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600 hover:bg-red-50"
+                        onClick={() => handleDelete(item.id)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -388,7 +412,15 @@ export default function StudentRegistrationList() {
             <div className="text-sm">Mobile: {item.mobileNumber}</div>
             <div className="text-sm">Email: {item.email}</div>
             <div className="text-sm">Team: {item.processedBy}</div>
-            <div className="text-sm">Status: {item.status}</div>
+            <div
+              className={cn("text-sm font-medium px-2 py-1 rounded-md w-fit", {
+                "text-green-700 bg-green-100": item.status === "APPROVED",
+                "text-amber-700 bg-amber-100": item.status === "PENDING",
+                "text-red-700 bg-red-100": item.status === "FAILED",
+              })}
+            >
+              {item.status}
+            </div>
             <div className="flex justify-end gap-2 mt-3">
               <Button
                 size="sm"

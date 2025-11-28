@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
-import { TopNav } from "@/components/layout/top-nav";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -163,203 +161,186 @@ export default function TransactionsPage() {
     },
   });
   return (
-    <div className="flex w-full bg-slate-100 min-h-screen">
-      <Sidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(!collapsed)}
-      />
+    <>
+      <Card className="p-6 m-4 shadow-md bg-white">
+        <h2 className="text-xl font-semibold mb-4">Transactions</h2>
 
-      <div className="flex-1 min-h-screen">
-        <TopNav
-          sidebarCollapsed={collapsed}
-          onToggleSidebar={() => setCollapsed(!collapsed)}
-        />
+        {/* Filters */}
+        <div className="grid lg:grid-cols-6 md:grid-cols-3 sm:grid-cols-2 gap-4 mb-6">
+          {/* Masters */}
+          <div>
+            <label className="text-sm font-medium">Abroad Masters</label>
+            <Select onValueChange={setMasters}>
+              <SelectTrigger>
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
 
-        <Card className="p-6 m-4 shadow-md bg-white">
-          <h2 className="text-xl font-semibold mb-4">Transactions</h2>
-
-          {/* Filters */}
-          <div className="grid lg:grid-cols-6 md:grid-cols-3 sm:grid-cols-2 gap-4 mb-6">
-            {/* Masters */}
-            <div>
-              <label className="text-sm font-medium">Abroad Masters</label>
-              <Select onValueChange={setMasters}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="ABROADMASTERS-USA">USA</SelectItem>
-                  <SelectItem value="ABROADMASTERS-UK">UK</SelectItem>
-                  <SelectItem value="ABROADMASTERS-AUSTRALIA">
-                    Australia
-                  </SelectItem>
-                  <SelectItem value="ABROADMASTERS-CANADA">Canada</SelectItem>
-                  <SelectItem value="ABROADMASTERS-GERMANY">Germany</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Team */}
-            <div>
-              <label className="text-sm font-medium">Team</label>
-              <Select onValueChange={setTeam}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="TEAM-1">TEAM-1</SelectItem>
-                  <SelectItem value="TEAM-2">TEAM-2</SelectItem>
-                  <SelectItem value="TEAM-ONLINE">TEAM-ONLINE</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Year */}
-            <div>
-              <label className="text-sm font-medium">Year</label>
-              <Select onValueChange={setYear}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="SPRING-2024">SPRING-2024</SelectItem>
-                  <SelectItem value="SPRING-2025">SPRING-2025</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">From</label>
-              <Input
-                type="date"
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">To</label>
-              <Input type="date" onChange={(e) => setToDate(e.target.value)} />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium">Search</label>
-              <Input
-                placeholder="Search…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+              <SelectContent>
+                <SelectItem value="ALL">All</SelectItem>
+                <SelectItem value="ABROADMASTERS-USA">USA</SelectItem>
+                <SelectItem value="ABROADMASTERS-UK">UK</SelectItem>
+                <SelectItem value="ABROADMASTERS-AUSTRALIA">
+                  Australia
+                </SelectItem>
+                <SelectItem value="ABROADMASTERS-CANADA">Canada</SelectItem>
+                <SelectItem value="ABROADMASTERS-GERMANY">Germany</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Export */}
-          <Button
-            onClick={exportExcel}
-            className="bg-green-600 hover:bg-green-700 mb-4 flex gap-2"
-          >
-            <FileDown className="w-4 h-4" /> Export Excel
-          </Button>
+          {/* Team */}
+          <div>
+            <label className="text-sm font-medium">Team</label>
+            <Select onValueChange={setTeam}>
+              <SelectTrigger>
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
 
-          {/* Table */}
-          <div className="overflow-x-auto border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>S.No</TableHead>
-                  <TableHead>Student Id</TableHead>
-                  <TableHead>Team</TableHead>
-                  <TableHead>Assignee</TableHead>
-                  <TableHead>Counsellor</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Mobile No</TableHead>
-                  <TableHead>Masters</TableHead>
-                  <TableHead>Paid Amount</TableHead>
-                  <TableHead>Payment Type</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Invoice No</TableHead>
-                  <TableHead>Actions</TableHead>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Approve</TableHead>
+              <SelectContent>
+                <SelectItem value="ALL">All</SelectItem>
+                <SelectItem value="TEAM-1">TEAM-1</SelectItem>
+                <SelectItem value="TEAM-2">TEAM-2</SelectItem>
+                <SelectItem value="TEAM-ONLINE">TEAM-ONLINE</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Year */}
+          <div>
+            <label className="text-sm font-medium">Year</label>
+            <Select onValueChange={setYear}>
+              <SelectTrigger>
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="ALL">All</SelectItem>
+                <SelectItem value="SPRING-2024">SPRING-2024</SelectItem>
+                <SelectItem value="SPRING-2025">SPRING-2025</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">From</label>
+            <Input type="date" onChange={(e) => setFromDate(e.target.value)} />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">To</label>
+            <Input type="date" onChange={(e) => setToDate(e.target.value)} />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-medium">Search</label>
+            <Input
+              placeholder="Search…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Export */}
+        <Button
+          onClick={exportExcel}
+          className="bg-green-600 hover:bg-green-700 mb-4 flex gap-2"
+        >
+          <FileDown className="w-4 h-4" /> Export Excel
+        </Button>
+
+        {/* Table */}
+        <div className="overflow-x-auto border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>S.No</TableHead>
+                <TableHead>Student Id</TableHead>
+                <TableHead>Team</TableHead>
+                <TableHead>Assignee</TableHead>
+                <TableHead>Counsellor</TableHead>
+                <TableHead>Student Name</TableHead>
+                <TableHead>Mobile No</TableHead>
+                <TableHead>Masters</TableHead>
+                <TableHead>Paid Amount</TableHead>
+                <TableHead>Payment Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Invoice No</TableHead>
+                <TableHead>Actions</TableHead>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Approve</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {filtered.map((p: any, i: number) => (
+                <TableRow key={p.id || i}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{p?.student?.stid}</TableCell>
+                  <TableCell>{p?.student?.processedBy}</TableCell>
+                  <TableCell>{p?.student?.assigneeName}</TableCell>
+                  <TableCell>{p?.student?.counselorName}</TableCell>
+
+                  <TableCell>{p?.student?.studentName}</TableCell>
+                  <TableCell>{p?.student?.mobileNumber}</TableCell>
+
+                  <TableCell>{p?.student?.abroadMasters}</TableCell>
+
+                  <TableCell>₹{p?.amount}</TableCell>
+                  <TableCell>{p?.paymentMethod}</TableCell>
+
+                  <TableCell>
+                    {new Date(p?.date).toLocaleDateString()}
+                  </TableCell>
+
+                  <TableCell>{p?.invoiceNumber}</TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        console.log(p);
+                        setOpenEdit(p);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </TableCell>
+
+                  {/* Invoice Button */}
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex gap-2"
+                      onClick={() => window.open(`/invoice/${p.id}`, "_blank")}
+                    >
+                      <Scroll className="w-4 h-4" />
+                      Open
+                    </Button>
+                  </TableCell>
+
+                  {/* Approve */}
+                  <TableCell>
+                    <span className="text-green-600 font-semibold">
+                      Approved
+                    </span>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
+              ))}
 
-              <TableBody>
-                {filtered.map((p: any, i: number) => (
-                  <TableRow key={p.id || i}>
-                    <TableCell>{i + 1}</TableCell>
-                    <TableCell>{p?.student?.stid}</TableCell>
-                    <TableCell>{p?.student?.processedBy}</TableCell>
-                    <TableCell>{p?.student?.assigneeName}</TableCell>
-                    <TableCell>{p?.student?.counselorName}</TableCell>
-
-                    <TableCell>{p?.student?.studentName}</TableCell>
-                    <TableCell>{p?.student?.mobileNumber}</TableCell>
-
-                    <TableCell>{p?.student?.abroadMasters}</TableCell>
-
-                    <TableCell>₹{p?.amount}</TableCell>
-                    <TableCell>{p?.paymentMethod}</TableCell>
-
-                    <TableCell>
-                      {new Date(p?.date).toLocaleDateString()}
-                    </TableCell>
-
-                    <TableCell>{p?.invoiceNumber}</TableCell>
-
-                    {/* Actions */}
-                    <TableCell>
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => {
-                          console.log(p);
-                          setOpenEdit(p);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-
-                    {/* Invoice Button */}
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex gap-2"
-                        onClick={() =>
-                          window.open(`/invoice/${p.id}`, "_blank")
-                        }
-                      >
-                        <Scroll className="w-4 h-4" />
-                        Open
-                      </Button>
-                    </TableCell>
-
-                    {/* Approve */}
-                    <TableCell>
-                      <span className="text-green-600 font-semibold">
-                        Approved
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">
-                      No transactions found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      </div>
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-4">
+                    No transactions found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
       {/* Invoice Modal */}
       {/* {openInvoice && (
@@ -503,6 +484,6 @@ export default function TransactionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

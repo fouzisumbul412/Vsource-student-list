@@ -13,7 +13,7 @@ function AdminLayoutComponent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full">
-      <AppSidebar collapsed={collapsed} />
+      <AppSidebar />
 
       {/* Main wrapper */}
       <div className="flex flex-col flex-1 min-w-0">
@@ -29,7 +29,7 @@ function AdminLayoutComponent({ children }: { children: React.ReactNode }) {
             {loading ? (
               <Card>
                 <CardContent className="py-6 text-sm text-slate-500">
-                  Loading user…
+                  Loading …
                 </CardContent>
               </Card>
             ) : error ? (
