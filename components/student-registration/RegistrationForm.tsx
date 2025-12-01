@@ -26,6 +26,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { stateDistricts } from "@/lib/stateDistricts";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface RegistrationFormProps {
   mode?: "create" | "edit";
@@ -55,6 +56,8 @@ export default function RegistrationForm({
   id,
 }: RegistrationFormProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  console.log(user);
 
   const academicYearOptions = useMemo(() => generateAcademicYearOptions(), []);
   const queryClient = useQueryClient();
@@ -117,6 +120,7 @@ export default function RegistrationForm({
     const payload = {
       ...data,
       serviceCharge: Number(data.serviceCharge || 0),
+      createdBy: user?.id,
     };
 
     if (mode === "edit" && id) {

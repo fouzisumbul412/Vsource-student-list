@@ -24,6 +24,7 @@ model User {
 
   employeeLoginDetails EmployeeLoginDetail[]
   auditLog             AuditLog[]
+  studentAdded         StudentRegistration[] @relation("UserCreatedStudents")
 }
 
 model EmployeeLoginDetail {
@@ -86,6 +87,9 @@ model StudentRegistration {
   status RegistrationStatus @default(HOLD)
 
   payment Payment?
+
+  createdBy     String
+  createdByUser User   @relation("UserCreatedStudents", fields: [createdBy], references: [id])
 
   // System Fields
   createdAt DateTime @default(now())
