@@ -30,6 +30,7 @@ export default function EditStudentPage({
           : "",
       };
     },
+    staleTime: 0,
   });
 
   if (isLoading) {

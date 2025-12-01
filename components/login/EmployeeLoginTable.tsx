@@ -30,7 +30,6 @@ export const EmployeeLoginTable: React.FC<Props> = ({
   page,
   pageSize,
   total,
-  onPageChange,
   onPageSizeChange,
 }) => {
   const startIndex = page * pageSize;
@@ -38,24 +37,6 @@ export const EmployeeLoginTable: React.FC<Props> = ({
 
   return (
     <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-2 border-b px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Show</span>
-          <select
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
-          >
-            {[10, 25, 50].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <span className="text-slate-600">entries</span>
-        </div>
-      </div>
-
       <div className="max-w-full overflow-x-auto">
         <Table className="min-w-full">
           <TableHeader>

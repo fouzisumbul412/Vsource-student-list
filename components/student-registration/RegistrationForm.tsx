@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   studentRegistrationSchema,
@@ -62,8 +62,8 @@ export default function RegistrationForm({
   const {
     register,
     control,
-    setValue,
     handleSubmit,
+    reset,
     watch,
     formState: { errors },
   } = useForm<StudentRegistrationForm>({
@@ -72,40 +72,23 @@ export default function RegistrationForm({
     reValidateMode: "onChange",
     defaultValues: mode === "edit" ? defaultValues : undefined,
   });
-  // Load student data when editing
-  const { data: editStudent, isLoading: editLoading } = useQuery({
-    queryKey: ["student-registration", id],
-    queryFn: () =>
-      studentRegistrationService.getById(id!).then((res) => res.data),
-    enabled: mode === "edit" && !!id,
-  });
 
-  // state is needed to compute districts
   const stateValue = watch("state");
   const districts = stateDistricts[stateValue] || [];
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   useEffect(() => {
-    if (editStudent && mode === "edit") {
-      Object.keys(editStudent).forEach((key) => {
-        if (editStudent[key] !== undefined) {
-          setValue(key as any, editStudent[key]);
-        }
-      });
+    if (mode === "edit" && defaultValues) {
+      reset(defaultValues);
     }
-  }, [editStudent, mode, setValue]);
+  }, [defaultValues, mode, reset]);
+
   const createMutation = useMutation({
     mutationFn: (payload: FormData) =>
       studentRegistrationService.create(payload).then((res) => res.data),
     onSuccess: (created) => {
       toast.success("Student Registered Successfully");
-
-      queryClient.setQueryData<any[]>(["student-registrations"], (old) => {
-        if (!old) return [created];
-        return [...old, created];
-      });
-
       queryClient.invalidateQueries({ queryKey: ["student-registrations"] });
     },
 
@@ -121,28 +104,12 @@ export default function RegistrationForm({
     onSuccess: (updated) => {
       toast.success("Student updated Successfully");
 
-      queryClient.setQueryData<any[]>(["student-registrations"], (old) => {
-        if (!old) return old;
-        return old.map((item) => (item.id === updated.id ? updated : item));
-      });
-
-      queryClient.setQueryData(["student-registration", id], updated);
-
-      // queryClient.invalidateQueries({ queryKey: ["student-registrations"] });
-
-      Object.keys(updated).forEach((key) => {
-        if (updated[key] !== undefined) {
-          setValue(key as any, updated[key]);
-        }
-      });
+      queryClient.invalidateQueries({ queryKey: ["student-registrations"] });
+      queryClient.invalidateQueries({ queryKey: ["student-registration", id] });
 
       router.push("/student-registration-list");
     },
   });
-
-  if (editLoading) {
-    return <div>Loading...</div>;
-  }
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
@@ -424,7 +391,7 @@ export default function RegistrationForm({
                         <SelectContent className="z-50 bg-white">
                           <SelectItem value="India">India</SelectItem>
                           <SelectItem value="USA">USA</SelectItem>
-                          <SelectItem value="UK">UK</SelectItem>
+                          <SelectItem value="OTHERS">Others</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -505,6 +472,7 @@ export default function RegistrationForm({
                           <SelectItem value="West Bengal">
                             West Bengal
                           </SelectItem>
+                          <SelectItem value="OTHERS">Others</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
