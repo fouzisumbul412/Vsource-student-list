@@ -79,7 +79,6 @@ export default function PaymentFormPage() {
   } = useQuery({
     queryKey: ["student", id],
     queryFn: ({ queryKey }) => fetchStudent(queryKey[1] as string),
-    placeholderData: keepPreviousData,
     enabled: !!id,
   });
 

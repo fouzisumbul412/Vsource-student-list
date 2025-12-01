@@ -10,17 +10,14 @@ import jwt from "jsonwebtoken";
 function generateInvoiceNumber(lastInvoice?: string) {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
-
   const shortYear = currentYear.toString().slice(2);
   const shortNext = nextYear.toString().slice(2);
   const yearRange = `${shortYear}-${shortNext}`;
-
   let nextNumber = 1;
   if (lastInvoice) {
     const match = lastInvoice.match(/B(\d+)$/);
     nextNumber = match ? parseInt(match[1]) + 1 : 1;
   }
-
   return `VV/${yearRange}/B${nextNumber.toString().padStart(2, "0")}`;
 }
 
@@ -79,26 +76,50 @@ export const POST = apiHandler(async (req: Request) => {
     throw new ApiError(400, "This student already has a payment record");
   }
 
-  const lastPayment = await prisma.payment.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+  const shortYear = currentYear.toString().slice(2);
+  const shortNext = nextYear.toString().slice(2);
+  const yearRange = `${shortYear}-${shortNext}`;
 
-  const nextInvoiceNumber = generateInvoiceNumber(lastPayment?.invoiceNumber);
+  const payment = await prisma.$transaction(async (tx) => {
+    const lastPayment = await tx.payment.findFirst({
+      where: {
+        invoiceNumber: { startsWith: `VV/${yearRange}/` },
+      },
+      orderBy: { invoiceNumber: "desc" },
+    });
 
-  const payment = await prisma.payment.create({
-    data: {
-      feeType: body.feeType,
-      subFeeType: body.subFeeType || null,
-      paymentMethod: body.paymentMethod,
-      amount: body.amount,
-      bankDetails: body.bankDetails,
-      invoiceNumber: nextInvoiceNumber,
-      studentId: body.studentId,
-      gst: body.gst,
-      gstAmount: body.gstAmount,
-      referenceNo: body.referenceNo,
-      status: "APPROVED",
-    },
+    let nextInvoiceNumber = generateInvoiceNumber(lastPayment?.invoiceNumber);
+
+    let exists = await tx.payment.findUnique({
+      where: { invoiceNumber: nextInvoiceNumber },
+    });
+
+    while (exists) {
+      const match = nextInvoiceNumber.match(/B(\d+)$/);
+      let num = match ? parseInt(match[1]) + 1 : 1;
+      nextInvoiceNumber = `VV/${yearRange}/B${num.toString().padStart(2, "0")}`;
+      exists = await tx.payment.findUnique({
+        where: { invoiceNumber: nextInvoiceNumber },
+      });
+    }
+
+    return await tx.payment.create({
+      data: {
+        feeType: body.feeType,
+        subFeeType: body.subFeeType || null,
+        paymentMethod: body.paymentMethod,
+        amount: body.amount,
+        bankDetails: body.bankDetails,
+        invoiceNumber: nextInvoiceNumber,
+        studentId: body.studentId,
+        gst: body.gst,
+        gstAmount: body.gstAmount,
+        referenceNo: body.referenceNo,
+        status: "APPROVED",
+      },
+    });
   });
 
   await prisma.auditLog.create({

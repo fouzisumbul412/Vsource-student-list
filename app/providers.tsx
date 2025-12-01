@@ -12,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             staleTime: 2 * 60 * 1000,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
-            refetchOnMount: false,
+            refetchOnMount: "always",
             refetchInterval: false,
           },
         },
