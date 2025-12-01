@@ -53,7 +53,7 @@ export const POST = apiHandler(async (req: Request, context: any) => {
   }
 
   let lastStudent = await prisma.studentRegistration.findFirst({
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     select: { stid: true },
   });
 
