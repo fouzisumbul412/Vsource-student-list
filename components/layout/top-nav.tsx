@@ -52,16 +52,10 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
               >
                 <Avatar className="h-10 w-10 bg-primary">
                   {/* User Image (optional) */}
-                  {user?.name?.charAt(0) ? (
-                    <AvatarImage
-                      src={user?.name?.charAt(0)}
-                      alt={user?.name || "User"}
-                    />
-                  ) : (
-                    <AvatarFallback className="bg-primary text-white">
-                      {user?.name?.charAt(0).toUpperCase() || "A"}
-                    </AvatarFallback>
-                  )}
+
+                  <AvatarFallback className="bg-primary text-white">
+                    {user?.name?.charAt(0)?.toUpperCase() || "A"}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -115,7 +109,7 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
 
               {/* Sidebar content (mobile mode) */}
               <div className="flex-1 overflow-y-auto">
-                <SidebarInner collapsed={false} mobile={true} />
+                <SidebarInner />
               </div>
             </div>
           </div>

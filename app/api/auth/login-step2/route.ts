@@ -28,7 +28,7 @@ export const POST = apiHandler(async (req: Request) => {
   if (!user) throw new ApiError(401, "Employee ID does not match");
 
   const finalToken = jwt.sign(
-    { id: user.id, employeeId: user.employeeId },
+    { id: user.id, employeeId: user.employeeId, role: user?.role },
     process.env.JWT_SECRET!,
     { expiresIn: "1d" }
   );
