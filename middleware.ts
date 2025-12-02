@@ -4,8 +4,6 @@ import { roleAccess } from "./utils/roleAccess";
 
 const PUBLIC_PATHS = [
   "/auth/login",
-  "/auth/forgot-password",
-  "/auth/reset-password",
   "/auth/login-step1",
   "/auth/login-step2",
   "/access-denied",
@@ -73,5 +71,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|assets).*)"],
 };
