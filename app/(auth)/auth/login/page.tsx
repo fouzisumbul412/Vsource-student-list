@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [tempToken, setTempToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form1, setForm1] = useState({ email: "", password: "" });
   const [form2, setForm2] = useState({ employeeId: "" });
@@ -156,14 +158,29 @@ export default function LoginPage() {
                 <label className="text-xs font-medium text-slate-700">
                   Password
                 </label>
-                <Input
-                  type="password"
-                  required
-                  value={form1.password}
-                  onChange={(e) =>
-                    setForm1((f) => ({ ...f, password: e.target.value }))
-                  }
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={form1.password}
+                    onChange={(e) =>
+                      setForm1((f) => ({ ...f, password: e.target.value }))
+                    }
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-700"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="text-right">
