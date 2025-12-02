@@ -14,7 +14,6 @@ const PUBLIC_PATHS = [
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("token")?.value;
-  console.log("token", token);
   const isPublicRoute = PUBLIC_PATHS.includes(pathname);
 
   if (pathname === "/") {
@@ -24,7 +23,6 @@ export function middleware(req: NextRequest) {
 
     const decoded: any = jwt.decode(token);
     const role = decoded?.role;
-    console.log("DECODED:", decoded);
 
     if (role === "SUB_ADMIN") {
       return NextResponse.redirect(new URL("/student-registration", req.url));
@@ -41,7 +39,6 @@ export function middleware(req: NextRequest) {
     if (token) {
       const decoded: any = jwt.decode(token);
       const role = decoded?.role;
-      console.log("DECODED ROLE:", role);
 
       if (role === "SUB_ADMIN") {
         return NextResponse.redirect(new URL("/student-registration", req.url));
@@ -59,7 +56,6 @@ export function middleware(req: NextRequest) {
 
   const decoded: any = jwt.decode(token);
   const role = decoded?.role;
-  console.log("DECODED ROLE:", role);
 
   const allowedRoutes = roleAccess[role];
 
