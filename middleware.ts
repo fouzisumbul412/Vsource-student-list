@@ -4,8 +4,6 @@ import { roleAccess } from "./utils/roleAccess";
 
 const PUBLIC_PATHS = [
   "/auth/login",
-  "/auth/forgot-password",
-  "/auth/reset-password",
   "/auth/login-step1",
   "/auth/login-step2",
   "/access-denied",

@@ -1,4 +1,3 @@
-// src/app/sub-admin/page.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -12,6 +11,14 @@ import {
 import { SubAdminTable } from "@/components/subadmin/SubAdminTable";
 import { useSubAdmins } from "@/hooks/useSubAdmins";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 const emptyForm: FormState = {
   staffName: "",
@@ -28,16 +35,12 @@ export default function SubAdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
-  // -----------------------------
-  // LOAD LIST USING useQuery
-  // -----------------------------
+  const queryClient = useQueryClient();
   const { data: subAdmins = [], isLoading } = useSubAdmins();
 
-  // -----------------------------
-  // SEARCH
-  // -----------------------------
   const filtered = useMemo(() => {
     if (!search.trim()) return subAdmins;
     const term = search.toLowerCase();
@@ -50,17 +53,18 @@ export default function SubAdminPage() {
     );
   }, [search, subAdmins]);
 
-  // -----------------------------
-  // FORM CHANGE
-  // -----------------------------
+  const paginated = useMemo(() => {
+    const start = page * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
   const handleChange = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // -----------------------------
-  // OPEN CREATE MODAL
-  // -----------------------------
   const openCreateModal = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -68,9 +72,6 @@ export default function SubAdminPage() {
     setModalOpen(true);
   };
 
-  // -----------------------------
-  // OPEN EDIT MODAL
-  // -----------------------------
   const openEditModal = (item: SubAdmin) => {
     setEditingId(item.id);
     setForm({
@@ -84,9 +85,6 @@ export default function SubAdminPage() {
     setModalOpen(true);
   };
 
-  // -----------------------------
-  // VALIDATE
-  // -----------------------------
   const validate = () => {
     const newErrors: FormErrors = {};
     if (!form.staffName) newErrors.staffName = "Required";
@@ -98,9 +96,6 @@ export default function SubAdminPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // -----------------------------
-  // CREATE / UPDATE MUTATION
-  // -----------------------------
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (editingId) {
@@ -131,9 +126,6 @@ export default function SubAdminPage() {
     },
   });
 
-  // -----------------------------
-  // DELETE MUTATION
-  // -----------------------------
   const deleteMutation = useMutation({
     mutationFn: (id: string) => subAdminService.delete(id),
     onSuccess: () => {
@@ -141,9 +133,6 @@ export default function SubAdminPage() {
     },
   });
 
-  // -----------------------------
-  // HANDLE DELETE
-  // -----------------------------
   const handleDelete = (item: SubAdmin) => {
     if (confirm(`Delete "${item.name}"?`)) {
       deleteMutation.mutate(item.id);
@@ -166,7 +155,10 @@ export default function SubAdminPage() {
               type="text"
               placeholder="Search..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
               className="rounded-lg border px-3 py-2 text-sm shadow-sm sm:w-64"
             />
 
@@ -180,11 +172,56 @@ export default function SubAdminPage() {
         </div>
 
         <SubAdminTable
-          items={filtered}
+          items={paginated}
           loading={isLoading}
           onEdit={openEditModal}
           onDelete={handleDelete}
         />
+
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            variant="outline"
+            disabled={page === 0}
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+          >
+            Previous
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <p className="text-sm">
+              Page {page + 1} of {totalPages || 1}
+            </p>
+
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setPage(0);
+              }}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Page Size" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            variant="outline"
+            disabled={page + 1 >= totalPages}
+            onClick={() =>
+              setPage((prev) => Math.min(prev + 1, totalPages - 1))
+            }
+          >
+            Next
+          </Button>
+        </div>
 
         <SubAdminModal
           open={modalOpen}

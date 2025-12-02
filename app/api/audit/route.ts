@@ -13,6 +13,7 @@ export const GET = apiHandler(async () => {
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(
     new ApiResponse(200, audit, "audit added successfully")
