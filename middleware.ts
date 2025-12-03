@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/auth/login-step1",
   "/auth/login-step2",
   "/access-denied",
+  "/account-locked",
 ];
 
 export function middleware(req: NextRequest) {

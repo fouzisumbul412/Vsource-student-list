@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/utils/ApiError";
 import { apiHandler } from "@/utils/apiHandler";
 import { ApiResponse } from "@/utils/ApiResponse";
+import {
+  checkLockOut,
+  handleFailedAttempt,
+  resetAttempts,
+} from "@/utils/checkLockout";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -25,7 +30,40 @@ export const POST = apiHandler(async (req: Request) => {
     where: { employeeId, email: decoded.email },
   });
 
-  if (!user) throw new ApiError(401, "Employee ID does not match");
+  if (!user) {
+    const userByEmail = await prisma.user.findUnique({
+      where: { email: decoded.email },
+    });
+
+    if (userByEmail) {
+      const { locked, message, lockUntil } = await handleFailedAttempt(
+        userByEmail
+      );
+
+      if (locked)
+        return NextResponse.json(
+          new ApiResponse(
+            403,
+            { redirect: "/account-locked", lockUntil, locked },
+            message
+          ),
+          { status: 403 }
+        );
+      throw new ApiError(401, `Employee ID does not match.`);
+    }
+
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  const { locked, message } = await checkLockOut(user);
+
+  if (locked)
+    return NextResponse.json(
+      new ApiResponse(403, { redirect: "/account-locked", locked }, message),
+      { status: 403 }
+    );
+
+  await resetAttempts(user.id);
 
   const finalToken = jwt.sign(
     { id: user.id, employeeId: user.employeeId, role: user?.role },

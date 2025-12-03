@@ -1,4 +1,5 @@
 import { ApiError } from "./ApiError";
+import { NextResponse } from "next/server";
 
 export const apiHandler = (handler: Function) => {
   return async (req: Request, context?: any) => {
@@ -6,9 +7,17 @@ export const apiHandler = (handler: Function) => {
       return await handler(req, context);
     } catch (error: any) {
       console.error("API Error:", error);
-      throw new ApiError(
-        error.statusCode || 500,
-        error.message || "Server Error"
+
+      const status = error.statusCode || 500;
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message || "Server Error",
+          errors: error.errors || [],
+          data: error.data || null,
+        },
+        { status }
       );
     }
   };
