@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/utils/ApiError";
 import { apiHandler } from "@/utils/apiHandler";
 import { ApiResponse } from "@/utils/ApiResponse";
+import {
+  checkLockOut,
+  handleFailedAttempt,
+  resetAttempts,
+} from "@/utils/checkLockout";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
@@ -21,9 +26,33 @@ export const POST = apiHandler(async (req: Request) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
+  const { locked, message, redirect, lockUntil } = await checkLockOut(user);
+
+  if (locked)
+    return NextResponse.json(
+      new ApiResponse(403, { redirect: redirect, locked, lockUntil }, message),
+      { status: 403 }
+    );
+
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!isMatch) throw new ApiError(401, "Invalid email or password");
+  if (!isMatch) {
+    const { locked, message, redirect, lockUntil } = await handleFailedAttempt(
+      user
+    );
+    if (locked)
+      return NextResponse.json(
+        new ApiResponse(
+          403,
+          { redirect: redirect, lockUntil, locked },
+          message
+        ),
+        { status: 403 }
+      );
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  await resetAttempts(user?.id);
 
   const tempToken = jwt.sign({ email }, process.env.JWT_SECRET!);
 

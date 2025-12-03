@@ -8,6 +8,8 @@ import { authService } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [step, setStep] = useState<1 | 2>(1);
@@ -22,10 +24,21 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const params = useSearchParams();
-  const redirectTo = params.get("from") || "/dashboard";
 
-  /* ----------------------------- STEP 1 ----------------------------- */
+  useEffect(() => {
+    const lockEmail = localStorage.getItem("lockEmail");
+    const lockUntil = localStorage.getItem("lockUntil");
+
+    if (!lockEmail || !lockUntil) return;
+
+    if (new Date(lockUntil) > new Date()) {
+      router.replace("/account-locked");
+    } else {
+      localStorage.removeItem("lockEmail");
+      localStorage.removeItem("lockUntil");
+    }
+  }, []);
+
   const handleStep1 = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -33,16 +46,27 @@ export default function LoginPage() {
 
     try {
       const res = await authService.loginStep1(form1);
-      setTempToken(res.data.tempToken);
+      setTempToken(res?.data?.tempToken);
+      toast.success(res?.data?.message || "Successfully completed step 1");
       setStep(2);
+      localStorage.removeItem("lockEmail");
+      localStorage.removeItem("lockUntil");
     } catch (err: any) {
+      if (err.response?.data?.data?.redirect) {
+        const lockUntil = err.response.data.data.lockUntil;
+
+        localStorage.setItem("lockEmail", form1.email);
+        localStorage.setItem("lockUntil", lockUntil);
+
+        router.push("/account-locked");
+        return;
+      }
       setError(err?.response?.data?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- Employee ID Auto Matching (Step 2 UI only) ---------------- */
   useEffect(() => {
     const id = form2.employeeId.trim();
     if (!id) {
@@ -62,7 +86,6 @@ export default function LoginPage() {
     return () => clearTimeout(check);
   }, [form2.employeeId]);
 
-  /* ----------------------------- STEP 2 ----------------------------- */
   const handleStep2 = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tempToken) return;
@@ -87,8 +110,21 @@ export default function LoginPage() {
         Accounts: "/transactions",
       };
 
+      toast.success(res?.data?.message || "Logged in Successfully");
+      localStorage.removeItem("lockEmail");
+      localStorage.removeItem("lockUntil");
       router.push(redirectMap[role] || "/dashboard");
     } catch (err: any) {
+      console.log(err);
+      if (err.response?.data?.data?.redirect) {
+        const lockUntil = err.response.data.data.lockUntil;
+        localStorage.setItem("lockEmail", form1.email);
+        localStorage.setItem("lockUntil", lockUntil);
+
+        router.push(err.response.data.data.redirect);
+        return;
+      }
+      toast.error(err?.response?.data?.message || "Attempt Failed");
       setError(err?.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -105,6 +141,7 @@ export default function LoginPage() {
           width={120}
           height={120}
           className="drop-shadow rounded-xl"
+          priority
         />
       </div>
 
@@ -141,9 +178,9 @@ export default function LoginPage() {
           {step === 1 && (
             <form className="space-y-3" onSubmit={handleStep1}>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-700">
+                <Label className="text-xs font-medium text-slate-700">
                   Login
-                </label>
+                </Label>
                 <Input
                   type="email"
                   required
@@ -151,13 +188,14 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setForm1((f) => ({ ...f, email: e.target.value }))
                   }
+                  placeholder="Enter the login"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-700">
+                <Label className="text-xs font-medium text-slate-700">
                   Password
-                </label>
+                </Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -167,6 +205,7 @@ export default function LoginPage() {
                       setForm1((f) => ({ ...f, password: e.target.value }))
                     }
                     className="pr-10"
+                    placeholder="Enter the password"
                   />
 
                   <button

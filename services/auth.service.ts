@@ -55,4 +55,11 @@ export const authService = {
     );
     return res.data;
   },
+  async checkLockout(email: string) {
+    return axios.post(
+      "/api/auth/check-lockout",
+      { email },
+      { withCredentials: true }
+    );
+  },
 };
