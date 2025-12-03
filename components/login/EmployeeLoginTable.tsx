@@ -1,7 +1,7 @@
 // src/components/login/EmployeeLoginTable.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { LoginLog } from "@/types/loginLog";
 import {
   Table,
@@ -11,6 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import axios from "axios";
+import { Button } from "../ui/button";
+import { DeleteConfirmDialog } from "../DeleteConfirmDialog";
+import { Trash2 } from "lucide-react";
 
 type Props = {
   items: LoginLog[];
@@ -34,6 +38,20 @@ export const EmployeeLoginTable: React.FC<Props> = ({
 }) => {
   const startIndex = page * pageSize;
   const endIndex = Math.min(startIndex + items.length, total);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      await axios.delete(`/api/employee-logins/${deleteId}`);
+      setDeleteOpen(false);
+      setDeleteId(null);
+      window.location.reload(); // or refetch() if you use react-query
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Delete failed");
+    }
+  };
 
   return (
     <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -48,6 +66,7 @@ export const EmployeeLoginTable: React.FC<Props> = ({
               <TableHead>Login Type</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Time</TableHead>
+              <TableHead>Delete</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -106,6 +125,19 @@ export const EmployeeLoginTable: React.FC<Props> = ({
                         })
                       : "-"}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setDeleteId(log.id);
+                        setDeleteOpen(true);
+                      }}
+                      className="bg-white"
+                    >
+                      <Trash2 size={16} className="text-red-600" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -126,6 +158,13 @@ export const EmployeeLoginTable: React.FC<Props> = ({
           )}
         </div>
       </div>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title="Delete Login Record"
+        description="Are you sure you want to delete this login history entry? This cannot be undone."
+      />
     </div>
   );
 };

@@ -62,29 +62,24 @@ export function AppSidebar() {
         {/* Logo Section */}
 
         <div className="flex items-center px-4 py-4">
-          {state !== "collapsed" ? (
-            <div className="relative h-10 w-60">
-              <Image
-                src="/assets/logo.webp"
-                alt="VSource Education"
-                width={80}
-                height={80}
-                className="object-cover rounded-sm"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="relative h-10 w-60">
-              <Image
-                src="/assets/logo-small.png"
-                alt="VSource Education"
-                height={80}
-                width={80}
-                className="object-cover rounded-sm "
-                priority
-              />
-            </div>
-          )}
+          <div
+            className={cn(
+              "relative h-20 flex items-center justify-center transition-all duration-300 ease-in-out",
+              state !== "collapsed" ? "w-60" : "w-20"
+            )}
+          >
+            <Image
+              src={
+                state !== "collapsed"
+                  ? "/assets/logo.webp"
+                  : "/assets/logo-small.png"
+              }
+              alt="VSource Education"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
 
         <SidebarGroup>

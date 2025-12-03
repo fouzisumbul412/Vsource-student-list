@@ -16,7 +16,7 @@ import {
 
 export default function EmployeeLoginPage() {
   const [search, setSearch] = useState("");
-  const [activeDate, setActiveDate] = useState<string>(() => getISTTodayISO());
+  const [activeDate, setActiveDate] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const [page, setPage] = useState(0);
@@ -32,7 +32,7 @@ export default function EmployeeLoginPage() {
   const {
     data: logs = [],
     isLoading,
-    isError,
+    isError,  
     error,
   } = useQuery<LoginLog[]>({
     queryKey: ["employee-login"],
@@ -95,12 +95,6 @@ export default function EmployeeLoginPage() {
             <h1 className="text-lg font-semibold sm:text-2xl">
               Employee Login History
             </h1>
-            <p className="text-sm text-slate-600 mt-1">
-              Today’s Login Details —
-              <span className="font-semibold text-slate-900">
-                {todayDisplay}
-              </span>
-            </p>
           </div>
 
           <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:items-end">

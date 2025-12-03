@@ -19,9 +19,10 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 type AuditLog = {
   id: string;
@@ -46,7 +47,6 @@ const sensitiveFields = [
   "userId",
   "studentId",
   "recordId",
-  "password",
   "createdAt",
   "updatedAt",
   "date",
@@ -68,7 +68,8 @@ export default function AuditLogPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
-
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
@@ -83,6 +84,19 @@ export default function AuditLogPage() {
     queryFn: fetchAuditLogs,
     staleTime: 0,
   });
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      await axios.delete(`/api/audit/${deleteId}`);
+      setDeleteOpen(false);
+      setDeleteId(null);
+      refetch();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Delete failed");
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!search.trim()) return logs;
@@ -211,6 +225,7 @@ export default function AuditLogPage() {
                     <TableHead>User Agent</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Details</TableHead>
+                    <TableHead>Delete</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -264,6 +279,19 @@ export default function AuditLogPage() {
                             )}
                           </Button>
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDeleteId(log.id);
+                              setDeleteOpen(true);
+                            }}
+                            className="bg-white"
+                          >
+                            <Trash2 size={16} className="text-red-600" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
 
                       {/* Expanded Details */}
@@ -285,27 +313,80 @@ export default function AuditLogPage() {
                                 </thead>
 
                                 <tbody>
-                                  {Object.keys({
-                                    ...log.oldValues,
-                                    ...log.newValues,
-                                  })
-                                    .filter(
+                                  {(() => {
+                                    const fields = Object.keys({
+                                      ...log.oldValues,
+                                      ...log.newValues,
+                                    }).filter(
                                       (field) =>
                                         !sensitiveFields.includes(field)
-                                    )
-                                    .map((field) => {
+                                    );
+
+                                    const changes = fields.filter((field) => {
+                                      const oldValue =
+                                        log.oldValues?.[field] ?? "--";
+                                      const newValue =
+                                        log.newValues?.[field] ?? "--";
+                                      return oldValue !== newValue;
+                                    });
+
+                                    // Special case: password change counts as change
+                                    const hasPasswordChange =
+                                      log.oldValues?.password !==
+                                      log.newValues?.password;
+
+                                    if (
+                                      changes.length === 0 &&
+                                      !hasPasswordChange
+                                    ) {
+                                      return (
+                                        <tr>
+                                          <td
+                                            colSpan={3}
+                                            className="p-3 text-center text-gray-600 font-medium"
+                                          >
+                                            No changes recorded
+                                          </td>
+                                        </tr>
+                                      );
+                                    }
+
+                                    return fields.map((field) => {
                                       const oldValue =
                                         log.oldValues?.[field] ?? "--";
                                       const newValue =
                                         log.newValues?.[field] ?? "--";
                                       const changed = oldValue !== newValue;
 
+                                      // Handle password separately
+                                      if (field === "password") {
+                                        if (!changed) return null;
+
+                                        return (
+                                          <tr
+                                            key={field}
+                                            className="bg-yellow-50"
+                                          >
+                                            <td className="p-2 border font-medium">
+                                              PASSWORD
+                                            </td>
+                                            <td className="p-2 border text-gray-500">
+                                              ••••••
+                                            </td>
+                                            <td className="p-2 border text-green-600 font-medium">
+                                              Password Changed
+                                            </td>
+                                          </tr>
+                                        );
+                                      }
+
+                                      // Skip unchanged fields
+                                      if (!changed) return null;
+
                                       return (
                                         <tr
                                           key={field}
-                                          className={
-                                            changed ? "bg-red-50/40" : ""
-                                          }
+                                          className="bg-red-50/40"
                                         >
                                           <td className="p-2 border font-medium">
                                             {field
@@ -313,27 +394,16 @@ export default function AuditLogPage() {
                                               .replace(/_/g, " ")
                                               .toUpperCase()}
                                           </td>
-                                          <td
-                                            className={`p-2 border ${
-                                              changed
-                                                ? "text-red-600 font-medium"
-                                                : "text-gray-500"
-                                            }`}
-                                          >
+                                          <td className="p-2 border text-red-600 font-medium">
                                             {String(oldValue)}
                                           </td>
-                                          <td
-                                            className={`p-2 border ${
-                                              changed
-                                                ? "text-green-600 font-medium"
-                                                : "text-gray-500"
-                                            }`}
-                                          >
+                                          <td className="p-2 border text-green-600 font-medium">
                                             {String(newValue)}
                                           </td>
                                         </tr>
                                       );
-                                    })}
+                                    });
+                                  })()}
                                 </tbody>
                               </table>
                             </div>
@@ -394,6 +464,13 @@ export default function AuditLogPage() {
           </div>
         </Card>
       </div>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this audit log entry? This action cannot be undone."
+      />
     </main>
   );
 }

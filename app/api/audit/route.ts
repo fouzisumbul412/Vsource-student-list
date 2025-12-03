@@ -19,3 +19,4 @@ export const GET = apiHandler(async () => {
     new ApiResponse(200, audit, "audit added successfully")
   );
 });
+

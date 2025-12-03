@@ -34,6 +34,7 @@ export default function SubAdminPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -53,10 +54,19 @@ export default function SubAdminPage() {
     );
   }, [search, subAdmins]);
 
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt ?? 0).getTime();
+      const dateB = new Date(b.createdAt ?? 0).getTime();
+
+      return sortOrder === "new" ? dateB - dateA : dateA - dateB;
+    });
+  }, [filtered, sortOrder]);
+
   const paginated = useMemo(() => {
     const start = page * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, page, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
@@ -179,6 +189,23 @@ export default function SubAdminPage() {
               }}
               className="rounded-lg border px-3 py-2 text-sm shadow-sm sm:w-64"
             />
+
+            {/* Sort dropdown */}
+            <Select
+              value={sortOrder}
+              onValueChange={(value: "new" | "old") => {
+                setSortOrder(value);
+                setPage(0);
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">Newest to Oldest</SelectItem>
+                <SelectItem value="old">Oldest to Newest</SelectItem>
+              </SelectContent>
+            </Select>
 
             <button
               onClick={openCreateModal}
