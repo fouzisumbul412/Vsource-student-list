@@ -7,7 +7,24 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export const GET = apiHandler(async () => {
+export const GET = apiHandler(async (req: Request) => {
+  const { searchParams } = new URL(req.url);
+
+  const type = searchParams.get("type");
+
+  if (type === "locked") {
+    const users = await prisma.user.findMany({
+      where: {
+        isLocked: true,
+        failedAttempts: 5,
+      },
+    });
+
+    return NextResponse.json(
+      new ApiResponse(200, users, "Locked users fetched")
+    );
+  }
+
   const users = await prisma.user.findMany();
   return NextResponse.json(
     new ApiResponse(200, users, "User added successfully")

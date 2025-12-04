@@ -24,6 +24,7 @@ import {
   FileText,
   Users,
   Footprints,
+  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/use-auth";
@@ -46,6 +47,7 @@ const menuItems = [
   { label: "Sub Admin Form", href: "/sub-admin", icon: Users },
   { label: "Employee Logins", href: "/employee-logins", icon: Users },
   { label: "Audit Logs", href: "/audit-log", icon: Footprints },
+  { label: "Security Alerts", href: "/security-alerts", icon: AlertCircle },
 ];
 
 export function AppSidebar() {
