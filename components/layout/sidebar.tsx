@@ -52,17 +52,23 @@ const menuItems = [
 
 export function AppSidebar() {
   const { user } = useAuth();
-  const { state } = useSidebar();
+  const { state, isMobile, openMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
 
   const allowedRoutes =
     user?.role && roleAccess[user.role] ? roleAccess[user.role] : [];
+
+  const handleNavClick = () => {
+    if (isMobile && openMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent>
-        {/* Logo Section */}
-
+        {/* Logo */}
         <div className="flex items-center px-4 py-4">
           <div
             className={cn(
@@ -89,19 +95,19 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems
-                ?.filter(
+                .filter(
                   (item) =>
                     allowedRoutes.includes("*") ||
                     allowedRoutes.includes(item.href)
                 )
-                ?.map((item) => {
+                .map((item) => {
                   const active = pathname === item.href;
                   return (
                     <SidebarMenuItem key={item.label}>
                       <SidebarMenuButton asChild isActive={isActive(item.href)}>
                         <Link
-                          key={item.href}
                           href={item.href}
+                          onClick={handleNavClick}
                           className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-sidebar-accent",
                             active && "bg-primary/10 text-primary font-semibold"
