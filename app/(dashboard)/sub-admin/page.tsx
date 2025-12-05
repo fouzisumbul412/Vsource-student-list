@@ -170,7 +170,8 @@ export default function SubAdminPage() {
   return (
     <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left Section */}
           <div>
             <h1 className="text-2xl font-semibold">Sub Admin List</h1>
             <p className="text-sm text-slate-600">
@@ -178,7 +179,9 @@ export default function SubAdminPage() {
             </p>
           </div>
 
-          <div className="flex gap-2 flex-col sm:flex-row sm:items-center">
+          {/* Right Controls */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
+            {/* Search */}
             <input
               type="text"
               placeholder="Search..."
@@ -187,29 +190,35 @@ export default function SubAdminPage() {
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              className="rounded-lg border px-3 py-2 text-sm shadow-sm sm:w-64"
+              className="h-10 w-full sm:w-64 rounded-lg border px-3 text-sm shadow-sm"
             />
 
-            {/* Sort dropdown */}
-            <Select
-              value={sortOrder}
-              onValueChange={(value: "new" | "old") => {
-                setSortOrder(value);
-                setPage(0);
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">Newest to Oldest</SelectItem>
-                <SelectItem value="old">Oldest to Newest</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Sort */}
+            <div className="flex flex-col">
+              <label className="text-xs font-medium text-slate-600 mb-1">
+                Sort By
+              </label>
+              <Select
+                value={sortOrder}
+                onValueChange={(value: "new" | "old") => {
+                  setSortOrder(value);
+                  setPage(0);
+                }}
+              >
+                <SelectTrigger className="h-10 w-44">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">Newest to Oldest</SelectItem>
+                  <SelectItem value="old">Oldest to Newest</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
+            {/* Add Button */}
             <button
               onClick={openCreateModal}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 shadow-sm"
+              className="h-10 rounded-lg bg-red-600 px-5 text-sm font-medium text-white shadow-sm hover:bg-red-700"
             >
               + Add Sub Admin
             </button>

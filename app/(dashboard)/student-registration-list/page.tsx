@@ -356,8 +356,6 @@ export default function StudentRegistrationList() {
 
           {/* Bottom Controls */}
           <div className="flex flex-wrap gap-3 mt-4">
-            <Button onClick={() => {}}>Submit</Button>
-
             <Button
               onClick={exportExcel}
               className="bg-red-600 hover:bg-red-700 text-white"

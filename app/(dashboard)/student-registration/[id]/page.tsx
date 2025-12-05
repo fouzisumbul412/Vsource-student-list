@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import RegistrationForm from "@/components/student-registration/RegistrationForm";
 import axios from "axios";
+import { Loader2 } from "lucide-react";
 
 export default function EditStudentPage({
   params,
@@ -34,7 +35,12 @@ export default function EditStudentPage({
   });
 
   if (isLoading) {
-    return <p className="p-4">Loading...</p>;
+    return (
+      <div className="flex items-center gap-2 p-6">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+        Loading...
+      </div>
+    );
   }
 
   if (isError || !data) {

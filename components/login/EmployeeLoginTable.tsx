@@ -15,6 +15,8 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import { DeleteConfirmDialog } from "../DeleteConfirmDialog";
 import { Trash2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type Props = {
   items: LoginLog[];
@@ -34,23 +36,32 @@ export const EmployeeLoginTable: React.FC<Props> = ({
   page,
   pageSize,
   total,
-  onPageSizeChange,
 }) => {
   const startIndex = page * pageSize;
   const endIndex = Math.min(startIndex + items.length, total);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  const queryClient = useQueryClient();
 
-    try {
-      await axios.delete(`/api/employee-logins/${deleteId}`);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await axios.delete(`/api/employee-logins/${id}`);
+      return res.data;
+    },
+    onSuccess: async (data) => {
       setDeleteOpen(false);
       setDeleteId(null);
-      window.location.reload(); // or refetch() if you use react-query
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Delete failed");
-    }
+      queryClient.invalidateQueries({ queryKey: ["employee-login"] });
+      toast.success(data?.message || "Deleted Successfully");
+    },
+    onError: async (err: any) => {
+      toast.error(err?.response?.data?.message || "Delete failed");
+    },
+  });
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    deleteMutation.mutate(deleteId);
   };
 
   return (
@@ -73,7 +84,7 @@ export const EmployeeLoginTable: React.FC<Props> = ({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-6 text-center text-sm text-slate-600"
                 >
                   Loading login history...
@@ -82,7 +93,7 @@ export const EmployeeLoginTable: React.FC<Props> = ({
             ) : items.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-6 text-center text-sm text-slate-600"
                 >
                   No login records found for the selected date.
@@ -159,6 +170,7 @@ export const EmployeeLoginTable: React.FC<Props> = ({
         </div>
       </div>
       <DeleteConfirmDialog
+        isLoading={deleteMutation.isPending}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}

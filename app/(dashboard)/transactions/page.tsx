@@ -222,6 +222,7 @@ export default function TransactionsPage() {
           <div>
             <label className="text-sm font-medium">Abroad Masters</label>
             <Select
+              value={masters}
               onValueChange={(v) => {
                 setMasters(v);
                 setPage(0);
@@ -247,6 +248,7 @@ export default function TransactionsPage() {
           <div>
             <label className="text-sm font-medium">Team</label>
             <Select
+              value={team}
               onValueChange={(v) => {
                 setTeam(v);
                 setPage(0);
@@ -268,6 +270,7 @@ export default function TransactionsPage() {
           <div>
             <label className="text-sm font-medium">Year</label>
             <Select
+              value={year}
               onValueChange={(v) => {
                 setYear(v);
                 setPage(0);
@@ -287,6 +290,7 @@ export default function TransactionsPage() {
           <div>
             <label className="text-sm font-medium">From</label>
             <Input
+              value={fromDate}
               type="date"
               onChange={(e) => {
                 setFromDate(e.target.value);
@@ -298,6 +302,7 @@ export default function TransactionsPage() {
           <div>
             <label className="text-sm font-medium">To</label>
             <Input
+              value={toDate}
               type="date"
               onChange={(e) => {
                 setToDate(e.target.value);
@@ -337,6 +342,26 @@ export default function TransactionsPage() {
                 <SelectItem value="asc">Oldest → Newest</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Clear Filters */}
+          <div className="flex flex-col justify-end">
+            <Button
+              variant="outline"
+              className="border-red-500 text-red-600 hover:bg-red-50 h-10"
+              onClick={() => {
+                setMasters("ALL");
+                setTeam("ALL");
+                setYear("ALL");
+                setFromDate("");
+                setToDate("");
+                setSearch("");
+                setSortOrder("desc");
+                setPage(0);
+              }}
+            >
+              Clear Filters
+            </Button>
           </div>
         </div>
 
@@ -396,12 +421,14 @@ export default function TransactionsPage() {
                   {/* Edit */}
                   {user?.role !== "Accounts" && (
                     <TableCell>
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => setOpenEdit(p)}
-                      >
-                        Edit
-                      </Button>
+                      <div className="text-center">
+                        <button
+                          onClick={() => setOpenEdit(p)}
+                          className="text-blue-600 font-medium underline-offset-4 hover:underline hover:text-blue-700 transition-colors"
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </TableCell>
                   )}
 
@@ -585,7 +612,7 @@ export default function TransactionsPage() {
 
           <DialogFooter>
             <Button
-              className="bg-blue-600 hover:bg-blue-700"
+              variant="ghost"
               disabled={updatePaymentMutation.isPending}
               onClick={() => {
                 const payload = {
@@ -605,7 +632,7 @@ export default function TransactionsPage() {
               {updatePaymentMutation.isPending ? "Saving..." : "Submit"}
             </Button>
 
-            <Button variant="default" onClick={() => setOpenEdit(null)}>
+            <Button variant="destructive" onClick={() => setOpenEdit(null)}>
               Cancel
             </Button>
           </DialogFooter>

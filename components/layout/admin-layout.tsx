@@ -6,6 +6,7 @@ import { TopNav } from "./top-nav";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarInset } from "@/components/ui/sidebar";
+import { Loader2 } from "lucide-react";
 
 function AdminLayoutComponent({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
@@ -29,7 +30,10 @@ function AdminLayoutComponent({ children }: { children: React.ReactNode }) {
             {loading ? (
               <Card>
                 <CardContent className="py-6 text-sm text-slate-500">
-                  Loading …
+                  <div className="flex items-center gap-2 p-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    Loading...
+                  </div>
                 </CardContent>
               </Card>
             ) : error ? (

@@ -93,6 +93,7 @@ export default function RegistrationForm({
     onSuccess: (created) => {
       toast.success("Student Registered Successfully");
       queryClient.invalidateQueries({ queryKey: ["student-registrations"] });
+      router.push("/student-registration-list");
     },
 
     onError: (err: any) => {
